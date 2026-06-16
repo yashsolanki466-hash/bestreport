@@ -1,0 +1,68 @@
+# Configuration for NGS Report Automation Pipeline
+
+required_directories:
+  - 01_Raw_Data
+  - 02_reference_genome_and_gff
+  - 05_differential_expression_analysis
+  - 06_Significant_DGE_GO
+  - 07_Significant_DGE_pathways
+
+# At least one of these satisfies "mapping" / "assembly" layout checks
+optional_directory_groups:
+  mapping:
+    - 03_Mapping
+    - 01_Raw_Data
+  assembly:
+    - 04_transcript_assembly_gtf
+    - 03_transcript_assembly_gtf
+    - 04_transcript_sequences_fasta
+
+dge_thresholds:
+  fdr: 0.05
+  log2fc: 1.0
+
+# Column mapping for various bioinformatics tools (STAR, edgeR, etc.)
+column_mapping:
+  raw_stats:
+    sample_col: ["Sample", "SampleID", "Sample Name", "file"]
+    reads_r1_col: ["Total_Reads_R1", "Total Reads R1", "Reads R1", "R1 Reads"]
+    reads_r2_col: ["Total_Reads_R2", "Total Reads R2", "Reads R2", "R2 Reads"]
+    reads_col: ["Total_Reads", "Total Reads(R1+R2)", "Total Reads", "ReadCount", "num_seqs"]
+    bases_col: ["Total_Bases", "Total Bases (R1+R2)", "Total Bases", "BaseCount"]
+    gb_col: ["Total_Data_GB", "Total Data(GB)", "Total Data", "Data(GB)"]
+    q30_col: ["Q30", "Q30_Percent", "%Q30"]
+    gc_col: ["GC%", "GC"]
+
+  mapping_stats:
+    sample_col: ["sample", "Sample", "Sample Name", "Sample ID"]
+    total_reads_col: ["total reads", "Total Reads", "Total Clean Reads", "Clean Reads"]
+    mapped_reads_col: ["mapped reads", "No. of Mapped reads", "Mapped Reads", "No. of Mapped Reads"]
+    pct_mapped_col: ["mapped reads %", "% of mapped reads", "% Mapped", "Percent Mapped", "mapped %"]
+    unique_reads_col: ["uniquely mapped", "uniquely mapped reads", "Uniquely Mapped", "Unique Reads", "# Uniquely Mapped"]
+    pct_unique_col: ["unique%", "% uniquely mapped reads", "% Unique", "Percent Unique", "unique %"]
+
+  assembly_stats:
+    sample_col: ["Sample", "Sample Name", "sample"]
+    transcripts_col: ["Number of Transcripts", "Transcripts", "# Assembled Transcripts", "num_transcripts"]
+    total_bp_col: ["Total (bp)", "Total bp", "Total Bases", "total_bp"]
+    mean_size_col: ["Mean Size", "Mean Transcript Size", "Mean Size (bp)", "mean_size"]
+
+  dge_stats:
+    fc_col: ["logfc", "log2fc", "log2foldchange", "logfoldchange", "lfc"]
+    p_col: ["padj", "adjp", "adjpval", "fdr", "qvalue", "qval", "pvalue", "pval"]
+
+  pathway_stats:
+    level1_col: ["level1", "level1category", "category", "class", "keggclass"]
+    level2_col: ["level2", "level2subcategory", "subcategory", "pathway", "keggpathway"]
+    count_col: ["count", "counts", "gene", "genes", "gene_count", "genecount"]
+
+# Quality Control thresholds
+qc_thresholds:
+  mapping_rate: 70.0 # Percentage
+  q30_rate: 80.0    # Percentage
+  min_reads: 5000000 # Minimum number of reads
+
+# Notification settings (mock for now)
+notifications:
+  enabled: false
+  webhook_url: ""

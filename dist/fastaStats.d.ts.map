@@ -1,0 +1,1 @@
+{"version":3,"file":"fastaStats.d.ts","sourceRoot":"","sources":["../src/fastaStats.ts"],"names":[],"mappings":"AAIA,MAAM,WAAW,kBAAkB;IACjC,MAAM,EAAE,MAAM,CAAC;IACf,eAAe,EAAE,MAAM,CAAC;IACxB,QAAQ,EAAE,MAAM,CAAC;IACjB,SAAS,EAAE,MAAM,CAAC;CACnB;AAED,0EAA0E;AAC1E,wBAAsB,uBAAuB,CAAC,SAAS,EAAE,MAAM,GAAG,OAAO,CAAC,kBAAkB,CAAC,CAsC5F"}

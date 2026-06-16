@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> Unigenome {{ project_id }}</title>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #F47920;
+            --secondary-color: #1A365D;
+            --accent-color: #3182CE;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --bg-body: #F7FAFC;
+            --bg-sidebar: rgba(255, 255, 255, 0.85);
+            --bg-paper: #FFFFFF;
+            --border-color: #E2E8F0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --glass-blur: blur(12px);
+        }
+
+        body {
+            font-family: 'Lora', "Times New Roman", serif;
+            font-size: 11pt;
+            line-height: 1.62;
+            color: var(--text-main);
+            background-color: var(--bg-body);
+            margin: 0;
+            padding-left: 280px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .ui-font {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .section {
+            scroll-margin-top: 40px;
+        }
+
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.05);
+            z-index: 1001;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 0.1s ease-out;
+        }
+
+        /* Fixed TOC Sidebar Style (Screen Only) */
+        #TOC {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg-sidebar);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--border-color);
+            padding: 40px 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .toc-header {
+            padding: 0 32px 24px 32px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        #TOC ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #TOC li a {
+            display: block;
+            padding: 12px 32px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #TOC li a:hover {
+            color: var(--secondary-color);
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        #TOC li a.active {
+            color: var(--secondary-color);
+            background: rgba(49, 130, 206, 0.08);
+            border-left: 4px solid var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .main-container {
+            margin: 40px auto;
+            padding: 80px 100px;
+            max-width: 1000px;
+            background-color: var(--bg-paper);
+            box-shadow: var(--card-shadow);
+            border-radius: 8px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Cover Page */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            padding: 50px;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+
+        .cover-logo {
+            max-width: 300px;
+            margin-bottom: 40px;
+        }
+
+        .cover-title {
+            font-size: 34px;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .cover-subtitle {
+            font-size: 22px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 40px;
+        }
+
+        .cover-details {
+            font-size: 16px;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 60px;
+        }
+
+        .submitted-by {
+            margin-top: 25px;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .toc-page {
+            page-break-after: always;
+            display: none;
+        }
+
+        .toc-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin-bottom: 14px;
+        }
+
+        .toc-list {
+            padding-left: 18px;
+            margin: 0;
+            font-size: 12.5px;
+            line-height: 1.55;
+        }
+
+        .submitted-to {
+            margin-top: auto;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Typography */
+        h1.title {
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            page-break-after: avoid;
+        }
+
+        h4 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0 30px 0;
+            page-break-inside: avoid;
+        }
+
+        .table-title {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+        }
+
+        table {
+            width: 100%;
+            max-width: 100%;
+            border-spacing: 0;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+            font-size: 11px;
+            /* Smaller for print readiness */
+        }
+
+        table th {
+            padding: 8px 10px;
+            background-color: var(--secondary-color);
+            color: #fff;
+            border: 1px solid var(--secondary-color);
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        table tr:nth-of-type(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Figures */
+        .figure {
+            margin: 30px 0;
+            text-align: center;
+            background: #fff;
+            padding: 10px;
+            /* border: 1px solid #eee; */
+            page-break-inside: avoid;
+        }
+
+        .figure img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .pdf-link {
+            display: inline-block;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            color: var(--secondary-color);
+            text-decoration: none;
+            background: #fafafa;
+            font-size: 12px;
+        }
+
+        .pdf-link:hover {
+            background: #f0f0f0;
+        }
+
+        .caption {
+            font-size: 11px;
+            color: var(--secondary-color);
+            margin-top: 10px;
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        /* Info Box */
+        .info-box {
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary-color);
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .mono {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11px;
+        }
+
+        .confidential {
+            color: #999;
+            font-size: 10px;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        /* Footer for Print - Browser Compatible */
+        .print-footer {
+            display: none;
+        }
+
+        /* Print-only repeating header */
+        .print-header {
+            display: none;
+        }
+
+        @media print {
+            .print-header {
+                display: block !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 45mm;
+                padding: 5mm 25mm 0 25mm;
+                background: white !important;
+                z-index: 9999;
+                box-sizing: border-box;
+                border-top: 6mm solid var(--primary-color) !important;
+            }
+
+            .header-top {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2mm;
+            }
+
+            .header-address {
+                font-size: 6.8pt;
+                color: #444;
+                line-height: 1.4;
+                text-align: left;
+                flex-grow: 1;
+            }
+
+            .print-header img {
+                height: 12mm;
+                width: auto;
+                margin-left: 15px;
+                display: block;
+            }
+
+            .header-info-line {
+                border-bottom: 0.5pt solid #ddd;
+                padding-bottom: 1mm;
+                display: flex;
+                justify-content: flex-end;
+                font-size: 8pt;
+                font-weight: 500;
+                color: #333;
+                margin-top: 1.5mm;
+            }
+        }
+
+        @media screen and (max-width: 992px) {
+            #TOC {
+                display: none;
+            }
+
+            body {
+                padding-left: 0;
+            }
+
+            .main-container {
+                margin: 0 auto;
+                padding: 20px;
+            }
+        }
+
+        /* Search Input */
+        .table-search-container {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 16px;
+        }
+
+        .table-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            color: var(--text-main);
+            background: #fff;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            position: relative;
+            padding-right: 24px;
+        }
+
+        /* Print Formatting */
+        @media print {
+            @page {
+                size: A4;
+                margin: 50mm 25mm 25mm 25mm;
+            }
+
+            @page :first {
+                margin: 15mm 25mm 25mm 25mm;
+            }
+
+            body {
+                background-color: #fff !important;
+                font-size: 10.5pt;
+                line-height: 1.55;
+                margin: 0;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            p {
+                orphans: 3;
+                widows: 3;
+            }
+
+            #TOC {
+                display: none;
+            }
+
+            .main-container {
+                margin: 0 auto;
+                padding: 0;
+                width: 100%;
+                max-width: none;
+                background: transparent;
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            h2 {
+                margin-top: 0;
+                padding-top: 14px;
+            }
+
+            .toc-page {
+                break-before: page;
+                page-break-before: always;
+            }
+
+            #section-1,
+            #section-2,
+            #section-3,
+            #section-4,
+            #section-5,
+            #section-6,
+            #section-7,
+            #section-8,
+            #section-9,
+            #section-10,
+            #section-11,
+            #section-12 {
+                break-before: page;
+                page-break-before: always;
+            }
+
+            .toc-page {
+                display: block;
+            }
+
+            .table-wrapper,
+            table,
+            .figure {
+                break-inside: avoid;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
+            }
+
+            /* Avoid breaking after h2/h3 */
+            h2,
+            h3 {
+                page-break-after: avoid;
+            }
+
+            /* Cover page print fixes */
+            .cover-page {
+                height: 280mm;
+                min-height: 100vh;
+                margin: 0;
+                padding: 40px 0;
+                page-break-after: always;
+                justify-content: space-between;
+                box-sizing: border-box;
+            }
+
+            /* Print footer with page number support */
+            .print-footer {
+                position: fixed;
+                bottom: -20mm;
+                left: 0;
+                right: 0;
+                text-align: center;
+                font-size: 9pt;
+                color: #666;
+            }
+
+            /* Hide interactive elements if any */
+            .no-print {
+                display: none;
+            }
+
+            /* Zebra striping for tables */
+            tbody tr:nth-child(even) {
+                background-color: #f5f5f5;
+            }
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+
+            /* Ensure background colors print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+        }
+
+        /* Utility classes for comparison toggles */
+        .hidden {
+            display: none !important;
+        }
+
+        .comp-btn.active {
+            background: var(--primary-color) !important;
+            color: #fff !important;
+        }
+
+        /* ============================================
+           PRINT STYLES - For PDF Generation
+           ============================================ */
+        @media print {
+            @page {
+                size: A4;
+                margin: 20mm 15mm 25mm 15mm;
+
+                @bottom-center {
+                    content: "Page " counter(page) " of " counter(pages);
+                    font-size: 9pt;
+                    color: #666;
+                }
+            }
+
+            @page :first {
+                margin: 0;
+
+                @bottom-center {
+                    content: none;
+                }
+            }
+
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            body {
+                font-family: Georgia, "Times New Roman", serif;
+                font-size: 11pt;
+                line-height: 1.6;
+                color: #2D3748;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Hide sidebar and navigation for print */
+            #TOC,
+            #progress-container,
+            .table-search-container,
+            .download-btn {
+                display: none !important;
+            }
+
+            /* Main container adjustments */
+            .main-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            /* Cover page */
+            .cover-page {
+                height: 100vh;
+                page-break-after: always;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 40px;
+                background: white !important;
+            }
+
+            .cover-logo {
+                max-width: 250px;
+                margin-bottom: 30px;
+            }
+
+            .cover-title {
+                font-size: 28pt;
+                font-weight: bold;
+                color: #000;
+                margin-bottom: 15px;
+                text-transform: uppercase;
+            }
+
+            .cover-subtitle {
+                font-size: 18pt;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 30px;
+            }
+
+            /* Section styling */
+            .section {
+                page-break-inside: avoid;
+                margin-bottom: 20pt;
+            }
+
+            h1 {
+                font-size: 18pt;
+                color: #1A365D;
+                border-bottom: 2pt solid #F47920;
+                padding-bottom: 8pt;
+                margin: 20pt 0 12pt 0;
+                page-break-after: avoid;
+            }
+
+            h2 {
+                font-size: 14pt;
+                color: #1A365D;
+                margin: 16pt 0 10pt 0;
+                page-break-after: avoid;
+            }
+
+            h3 {
+                font-size: 12pt;
+                color: #2D3748;
+                margin: 12pt 0 8pt 0;
+                page-break-after: avoid;
+            }
+
+            h4 {
+                font-size: 11pt;
+                color: #2D3748;
+                margin: 10pt 0 6pt 0;
+                page-break-after: avoid;
+            }
+
+            p {
+                text-align: justify;
+                margin-bottom: 10pt;
+                orphans: 3;
+                widows: 3;
+            }
+
+            /* Table styling for print */
+            .table-wrapper {
+                margin: 15pt 0;
+                page-break-inside: avoid;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 9pt;
+                page-break-inside: avoid;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            th {
+                background-color: #1A365D !important;
+                color: white !important;
+                font-weight: bold;
+                padding: 8pt 6pt;
+                text-align: left;
+                border: 1pt solid #1A365D;
+            }
+
+            td {
+                padding: 6pt;
+                border: 0.5pt solid #E2E8F0;
+                vertical-align: top;
+            }
+
+            tr:nth-child(even) {
+                background-color: #F7FAFC !important;
+            }
+
+            /* Image styling */
+            img {
+                max-width: 100%;
+                height: auto;
+                page-break-inside: avoid;
+            }
+
+            .chart-container,
+            .figure-container {
+                page-break-inside: avoid;
+                margin: 15pt 0;
+                text-align: center;
+            }
+
+            figure {
+                page-break-inside: avoid;
+                margin: 15pt 0;
+            }
+
+            figcaption {
+                font-size: 9pt;
+                color: #666;
+                text-align: center;
+                margin-top: 5pt;
+            }
+
+            /* List styling */
+            ul,
+            ol {
+                margin: 10pt 0;
+                padding-left: 20pt;
+            }
+
+            li {
+                margin-bottom: 4pt;
+            }
+
+            /* Info boxes and cards */
+            .info-box,
+            .highlight-box {
+                border: 1pt solid #E2E8F0;
+                padding: 10pt;
+                margin: 10pt 0;
+                background-color: #F7FAFC !important;
+                page-break-inside: avoid;
+            }
+
+            /* Links */
+            a {
+                color: #3182CE;
+                text-decoration: none;
+            }
+
+            a[href]:after {
+                content: " (" attr(href) ")";
+                font-size: 8pt;
+                color: #666;
+            }
+
+            /* Page breaks */
+            .page-break {
+                page-break-before: always;
+            }
+
+            .no-break {
+                page-break-inside: avoid;
+            }
+
+            /* Footer content */
+            .footer-content {
+                font-size: 8pt;
+                color: #666;
+                text-align: center;
+                margin-top: 20pt;
+                border-top: 0.5pt solid #E2E8F0;
+                padding-top: 10pt;
+            }
+
+            /* Sample info cards */
+            .sample-card {
+                border: 1pt solid #E2E8F0;
+                padding: 10pt;
+                margin: 8pt 0;
+                page-break-inside: avoid;
+            }
+
+            /* Quality metrics */
+            .quality-metric {
+                display: inline-block;
+                margin: 3pt 6pt;
+                padding: 4pt 8pt;
+                background-color: #F7FAFC !important;
+                border: 0.5pt solid #E2E8F0;
+                font-size: 9pt;
+            }
+
+            /* Two column layout for print */
+            .two-column {
+                column-count: 2;
+                column-gap: 20pt;
+            }
+
+            /* Prevent orphans and widows */
+            p,
+            li {
+                orphans: 3;
+                widows: 3;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    {% set static_snippets = static_content.get('snippets', {}) if static_content else {} %}
+
+    <div class="print-header">
+        <div class="header-top">
+            <div class="header-address">
+                <span style="font-weight: 700; color: var(--secondary-color); margin-bottom: 1px; display: block;">Lab
+                    Facility:</span>
+                2A, 3A, 3B PASL -House, Beside Sahjanand college, Opposite Kamdenu Complex,<br>
+                Panjarapole, Ambawadi, Ahmedabad-380015, Gujarat<br>
+                Ph:+91-79-49006800 | WhatsApp: +91-6356005900 | Email: info@unigenome.in | Website: www.unigenome.in
+            </div>
+            <img src="{{ logo_path }}" alt="Logo" />
+        </div>
+        <div class="header-info-line">
+            NGS-{{ project_id }} | Date: {{ report_date }}
+        </div>
+    </div>
+
+    <div id="TOC">
+        <div class="toc-header">
+            <div
+                style="font-weight: 800; color: var(--primary-color); font-size: 18px; letter-spacing: 0.5px; font-family: 'Inter', sans-serif;">
+                UNIGENOME</div>
+            <div style="font-size: 12px; color: var(--text-muted); font-family: 'Inter', sans-serif;">Final Analysis
+                Report</div>
+        </div>
+        <ul style="margin-top: 10px;">
+            <li><a href="#section-1" class="active"><i data-lucide="info"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 1 Project Details</a>
+            </li>
+            <li><a href="#section-2"><i data-lucide="users"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 2 Sample Information</a>
+            </li>
+            <li><a href="#section-3"><i data-lucide="flask-conical"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 3 Methods</a></li>
+            <li><a href="#section-4"><i data-lucide="shield-check"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 4 Library QC</a></li>
+            <li><a href="#section-5"><i data-lucide="binary"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 5 Bioinformatics
+                    Analysis</a></li>
+            <li><a href="#section-6"><i data-lucide="bar-chart-3"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 6 Data Statistics</a>
+            </li>
+            <li><a href="#section-7"><i data-lucide="dna"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 7 Reference Genome</a>
+            </li>
+            <li><a href="#section-8"><i data-lucide="map"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 8 Mapping to
+                    Reference</a></li>
+            <li><a href="#section-9"><i data-lucide="layers"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 9 Transcript Assembly</a>
+            </li>
+            <li><a href="#section-10"><i data-lucide="git-compare"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 10 Differential
+                    Expression</a></li>
+            <li><a href="#section-11"><i data-lucide="tags"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 11 Functional
+                    Annotation</a></li>
+            <li><a href="#section-12"><i data-lucide="package"
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 12 Deliverables</a></li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+
+
+
+
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <div style="width: 100%;">
+                <img src="{{ logo_path }}" alt="Unigenome Logo" class="cover-logo">
+            </div>
+
+            <div>
+                <div class="cover-title">Final Report of</div>
+                <div class="cover-subtitle">Whole Transcriptome Sequencing<br>& Analysis</div>
+                <div class="cover-details">On Illumina Novaseq X Plus Platform</div>
+            </div>
+
+            <div class="submitted-to">
+                <p style="margin-bottom: 5px;">Submitted to:</p>
+                <div style="font-size: 22px; color: var(--primary-color);">{{ client_name }}</div>
+                <div style="font-size: 16px; color: #333;">{{ client_org }}</div>
+
+                <div class="submitted-by">
+                    <div style="font-weight: bold; margin-top: 18px;">Submitted by:</div>
+                    <div style="font-weight: 700;">Unigenome</div>
+                    <div>A life sciences division of Unipath Specialty Laboratory Ltd.</div>
+                    <div>3rd Floor, PASL House | Beside Sahjanand College | Panjara pol, Ambawadi,</div>
+                    <div>Ahmedabad – 380015 | Gujarat, India</div>
+                    <div>Tel :- +91-79-66197701</div>
+                    <div>genomics@unipath.in | www.unigenome.in</div>
+                </div>
+            </div>
+
+            <div
+                style="width: 100%; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 40px; font-size: 10px; color: #666;">
+                Unigenome | Confidential | {{ project_id }} | {{ report_date }}
+            </div>
+        </div>
+
+        <div class="toc-page" id="section-toc-print">
+            <div class="toc-title">Table of Contents</div>
+            <ol class="toc-list">
+                <li>Project Details</li>
+                <li>Sample Details</li>
+                <li>Methods</li>
+                <li>Quantity and quality check (QC) of library on Agilent Tape Station 4150</li>
+                <li>Bioinformatics Analysis</li>
+                <li>Data statistics</li>
+                <li>Reference genome information</li>
+                <li>Mapping to reference genome</li>
+                <li>Transcript assembly</li>
+                <li>Differential expression analysis</li>
+                <li>Functional annotation</li>
+                <li>Deliverables</li>
+            </ol>
+        </div>
+
+        <!-- Print Footer (Repeating) -->
+        <div class="print-footer">
+            Unigenome | Confidential | {{ project_id }}
+        </div>
+
+        <!-- Section 1 -->
+        {% if warnings and warnings|length > 0 %}
+        <div id="section-warnings" class="section">
+            <h2>Input Validation Warnings</h2>
+            <div class="table-wrapper">
+                <div class="table-title">Warnings detected while scanning the deliverables folder</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Warning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in warnings %}
+                        <tr>
+                            <td>{{ w }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div id="section-1" class="section">
+            <h2>1 Project Details</h2>
+            <p>This report details the whole transcriptome sequencing and bioinformatics analysis for the project
+                {{ project_id }}. Sequencing was carried out using high-throughput technology to provide deep coverage
+                of the
+                transcriptome.</p>
+            {% if project_pi or application or no_of_samples %}
+            <div class="table-wrapper">
+                <div class="table-title">Project Metadata</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if project_pi %}
+                        <tr>
+                            <td>Project PI</td>
+                            <td>{{ project_pi }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if application %}
+                        <tr>
+                            <td>Application</td>
+                            <td>{{ application }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if no_of_samples %}
+                        <tr>
+                            <td>No. of Samples</td>
+                            <td>{{ no_of_samples }}</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            <div class="table-wrapper">
+                <div class="table-title">Table 1.1: Project Specifications</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service Type</th>
+                            <th>Platform</th>
+                            <th>Read Length</th>
+                            <th>Data Throughput</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Transcriptome Sequencing</td>
+                            <td>Illumina Novaseq X Plus</td>
+                            <td>2 X 150 PE</td>
+                            <td>~05 GB / Sample</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div id="section-2" class="section">
+            <h2>2 Sample Information</h2>
+            <p>A total of {{ sample_count }} samples were received for library preparation and sequencing. The samples
+                were collected
+                from plant root tissues and maintained under strict temperature controls during transport.</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 2.1: Sample Overview</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>No. of Samples</th>
+                            <th>Shipping Condition</th>
+                            <th>Libraries Prepared</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Plant Root</td>
+                            <td>{{ sample_count }}</td>
+                            <td>-20°C</td>
+                            <td>{{ sample_count }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p><strong>Sample Nomenclature:</strong> {{ samples | join(', ') }}</p>
+        </div>
+
+        <!-- Section 3 -->
+        <div id="section-3" class="section">
+            <h2>3 Methods</h2>
+
+            <h3>3.1 Isolation and Quantitative analysis of RNA:</h3>
+            <p>{{ static_snippets.get('wet_lab', {}).get('rna_isolation_qc') or 'RNA samples were extracted from leaf
+                sample using PVP extraction method. RNA quantity was measured using Qubit® 4.0 fluorometer and quality
+                were analyzed by using 1% agarose gel.' }}</p>
+
+            <h3>3.2 Preparation of Library</h3>
+            <p>{{ static_snippets.get('wet_lab', {}).get('library_preparation') or 'The paired-end sequencing library
+                was prepared using KAPA mRNA HyperPrep Kit for Illumina. (CAT #KK8581). The library preparation process
+                was initiated with 500-1000 ng input. mRNA enrichment was performed as per user manual and mRNA was
+                subjected to fragmentation, first & second-strand cDNA synthesis, end-repair, 3´ adenylating, adapter
+                ligation, selective enrichment of adapter-ligated DNA fragments through PCR amplification, followed by
+                validation of Library on Agilent 4150 tape station. The final library was pooled with other-samples,
+                denatured & loaded on to flow cell. On the flow cell, cluster generation & sequencing was performed
+                using Illumina Novaseq X plus platform to generate 2×150bp paired-end (PE) read' }}</p>
+
+            <h3>3.3 Quantification using Qubit 4.0 Fluorometer</h3>
+            <div class="table-wrapper">
+                <div class="table-title">Table 3.1: RNA Quantification (Qubit)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.N</th>
+                            <th>Sample ID</th>
+                            <th>Conc. (ng/µl)</th>
+                            <th>Volume (µl)</th>
+                            <th>Yield (µg)</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Placeholder for Qubit Data: Assuming a static placeholder or passed data -->
+                        <!-- In a real scenario, this would loop over a 'qubit_data' list -->
+                        {% for q in qubit_data %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ q.sample_id }}</td>
+                            <td>{{ q.conc }}</td>
+                            <td>{{ q.vol }}</td>
+                            <td>{{ q.yield }}</td>
+                            <td>{{ q.remarks }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6">No Qubit data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>3.4 Cluster Generation and Sequencing</h3>
+            <p>After obtaining the Qubit concentration for the library and the mean peak size from Tape Station profile,
+                library will be loaded onto illumine Novaseq X Plus for cluster generation and sequencing. Paired-End
+                sequencing allows the template fragments to be sequenced in both the forward and reverse directions. The
+                library molecules will bind to complementary adapter oligos on paired-end flow cell. The adapters are
+                designed to allow selective cleavage of the forward strands after re-synthesis of the reverse strand
+                during sequencing. The copied reverse strand is then used to sequence from the opposite end of the
+                fragment.</p>
+        </div>
+
+        <!-- Section 4 -->
+        <div id="section-4" class="section">
+            <h2>4 Library Quality Control</h2>
+            <p>Amplified libraries were analyzed on a TapeStation 4150 (Agilent Technologies) using High Sensitivity
+                D1000 ScreenTape® to determine mean peak sizes and ensure proper fragment distribution.</p>
+
+
+
+            <h4>4.1 Wet Lab Inferences</h4>
+            <!-- Assuming static text or needs dynamic generation based on average sizes -->
+            <p>The average sizes of the generated libraries were determined to be {{ library_sizes | join(', ') }}
+                respectively for the {{ sample_count }} samples. All libraries met the concentration and size
+                requirements for high-quality sequencing on the Novaseq X Plus platform.</p>
+        </div>
+
+        <!-- Section 5 -->
+        <div id="section-5" class="section">
+            <h2>5 Bioinformatics Analysis</h2>
+            <p>{{ static_snippets.get('bioinformatics', {}).get('analysis_intro') or 'Bioinformatics analysis includes
+                read filtering, mapping, assembly, differential expression, and functional annotation.' }}</p>
+
+            {% if workflow_figure_src %}
+            <div class="figure">
+                <img src="{{ workflow_figure_src }}" alt="Bioinformatics workflow" />
+                <p class="caption">Figure 6: Bioinformatics Analysis Workflow</p>
+            </div>
+            {% endif %}
+            <h3>5.1 Bioinformatics Workflow</h3>
+            <p>{{ static_snippets.get('bioinformatics', {}).get('workflow_narrative') or 'Raw data was filtered to
+                remove adapters and low-quality bases. Clean reads thus produced were used for analysis. Reference
+                guided transcript assembly was performed for samples first by mapping clean reads on reference genome
+                using STAR (v2.7.10a) aligner and then performing transcript assembly by StringTie (v 2.2.1). A
+                consensus set of transcripts was obtained using SringTie merge function which merges together all the
+                gene structures found in any of the samples. Transcript abundance was then estimated for individual
+                sample using merged transcript consensus again using StringTie and read counts thus obtained for each
+                transcript were taken as input for differential expression analysis using edgeR package. Gene Ontology
+                and pathway analysis of the significantly differentially expressed transcripts were performed using
+                Blast2go cli and KEGG-KAAS server respectively. Overall bioinformatics workflow is graphically
+                represented in figure above and software version along with its use in table below.' }}</p>
+
+            <h3>5.2 Detail of Software used for analysis</h3>
+            <div class="table-wrapper">
+                <div class="table-title">Table 5.1: Software Stack</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Software</th>
+                            <th>Version</th>
+                            <th>Application</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set wf_table = static_snippets.get('workflow', {}).get('software_table', {}) %}
+                        {% set wf_rows = wf_table.get('rows', []) if wf_table else [] %}
+                        {% if wf_rows and wf_rows|length > 0 %}
+                        {% for r in wf_rows %}
+                        <tr>
+                            <td>{{ r[0] }}</td>
+                            <td>{{ r[1] }}</td>
+                            <td>{{ r[2] }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td>Trim Galore</td>
+                            <td>0.6.4</td>
+                            <td>Adapter and low-quality data removal</td>
+                        </tr>
+                        <tr>
+                            <td>STAR</td>
+                            <td>2.7.10</td>
+                            <td>Mapping of reads to reference genome</td>
+                        </tr>
+                        <tr>
+                            <td>Stringtie</td>
+                            <td>2.2.1</td>
+                            <td>Reference based assembly</td>
+                        </tr>
+                        <tr>
+                            <td>gffcompare</td>
+                            <td>0.12.6</td>
+                            <td>Comparing reference genome gff with merged gff file generated from stringtie</td>
+                        </tr>
+                        <tr>
+                            <td>gffread</td>
+                            <td>0.12.7</td>
+                            <td>Fetching fasta sequences corresponding to gff file generated after reference-based
+                                assembly by stringtie</td>
+                        </tr>
+                        <tr>
+                            <td>Blastx</td>
+                            <td>2.30.0+</td>
+                            <td>Similarity search against NCBI NR database</td>
+                        </tr>
+                        <tr>
+                            <td>Blast2go cli</td>
+                            <td>1.5</td>
+                            <td>GO mapping and annotation</td>
+                        </tr>
+                        <tr>
+                            <td>edgeR</td>
+                            <td>3.6.2</td>
+                            <td>Differential expression analysis and its visualization</td>
+                        </tr>
+                        <tr>
+                            <td>KEGG KAAS</td>
+                            <td>Webserver</td>
+                            <td>Pathway analysis</td>
+                        </tr>
+                        <tr>
+                            <td>clusterProfiler</td>
+                            <td>4.12.6</td>
+                            <td>Over-representation (or enrichment) analysis</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 6 -->
+        <div id="section-6" class="section">
+            <h2>6 Data Statistics</h2>
+            <p>{{ static_snippets.get('data_stats', {}).get('illumina_intro') or 'Next-generation sequencing statistics
+                for raw data generated on the Novaseq platform are provided in the table below.' }}</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 6.1: Sequencing Data Statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sample</th>
+                            <th>Total Reads in R1</th>
+                            <th>Total Reads in R2</th>
+                            <th>Total Reads (R1+R2)</th>
+                            <th>Total Bases</th>
+                            <th>Data (GB)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in sequencing_stats %}
+                        <tr>
+                            <td>{{ s.sample }}</td>
+                            <td class="mono">{{ s.total_reads_r1 }}</td>
+                            <td class="mono">{{ s.total_reads_r2 }}</td>
+                            <td class="mono">{{ s.total_reads }}</td>
+                            <td class="mono">{{ s.total_bases }}</td>
+                            <td class="font-bold">{{ s.data_gb }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 7 -->
+        <div id="section-7" class="section">
+            <h2>7 Reference Genome</h2>
+            <p>{{ static_snippets.get('reference', {}).get('genome_source') or 'The reference genome of ' +
+                reference_organism + ' was used for alignment and annotation.' }}</p>
+            <p>{{ static_snippets.get('reference', {}).get('gff_annotation') or 'The corresponding GFF file contains
+                locus and structural information regarding ' + total_genes + ' genes.' }}</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 7.1: Reference Genome Statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Stats</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total Chromosomes/Scaffolds</td>
+                            <td>{{ ref_stats.total_scaffolds }}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Genome Length (bp)</td>
+                            <td>{{ ref_stats.genome_length }}</td>
+                        </tr>
+                        <tr>
+                            <td>Mean Scaffold Size</td>
+                            <td>{{ ref_stats.mean_scaffold_size }}</td>
+                        </tr>
+                        <tr>
+                            <td>Max Scaffold Size (bp)</td>
+                            <td>{{ ref_stats.max_scaffold_size }}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Genes Annotated</td>
+                            <td>{{ total_genes }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 8 -->
+        <div id="section-8" class="section">
+            <h2>8 Mapping to Reference</h2>
+            <p>{{ static_snippets.get('mapping', {}).get('star_methodology') or 'Alignment to the reference genome
+                allows the identification of reads originating from specific loci. Mapping results show high percentages
+                of uniquely mapped reads for most samples.' }}</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 8.1: Mapping Statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sample Name</th>
+                            <th>Total Clean Reads</th>
+                            <th>No. of Mapped Reads</th>
+                            <th>% Mapped</th>
+                            <th># Uniquely Mapped</th>
+                            <th>% Uniquely Mapped</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in mapping_stats %}
+                        <tr>
+                            <td>{{ m.sample_name }}</td>
+                            <td class="mono">{{ m.total_reads }}</td>
+                            <td class="mono">{{ m.mapped_reads }}</td>
+                            <td>{{ m.percent_mapped }}</td>
+                            <td class="mono">{{ m.unique_reads }}</td>
+                            <td>{{ m.percent_unique }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 9 -->
+        <div id="section-9" class="section">
+            <h2>9 Transcript Assembly</h2>
+            <p>{{ static_snippets.get('assembly', {}).get('stringtie_methodology') or 'StringTie assembles transcripts
+                from RNA-seq reads that have been aligned to the genome, first grouping the reads into distinct gene
+                loci and then assembling each locus into as many isoforms as are needed to explain the data.' }}</p>
+
+            <p>{{ static_snippets.get('assembly', {}).get('stringtie_merge') or 'After assembling each sample, the full
+                set of assemblies is passed to StringTie\'s merge function, which merges together all the gene
+                structures found in any of the samples. This step is required because transcripts in some of the samples
+                might only be partially covered by reads.' }}</p>
+
+            {% if stringtie_merge_figure_src %}
+            <div class="figure">
+                <img src="{{ stringtie_merge_figure_src }}" alt="StringTie merge illustration" />
+                <p class="caption">{{ static_snippets.get('assembly', {}).get('stringtie_merge_caption') or '' }}</p>
+            </div>
+            {% endif %}
+
+            <div class="table-wrapper">
+                <div class="table-title">Table 9.1: Assembly Statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sample Name</th>
+                            <th># Assembled Transcripts</th>
+                            <th>Total (bp)</th>
+                            <th>Mean Size (bp)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in assembly_stats %}
+                        <tr>
+                            <td>{{ a.sample }}</td>
+                            <td class="mono">{{ a.num_transcripts }}</td>
+                            <td class="mono">{{ a.total_bp }}</td>
+                            <td>{{ a.mean_size }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+
+            <h3>9.1 Comparison of assembled transcripts with reference transcripts</h3>
+            <p>{{ static_snippets.get('assembly', {}).get('gffcompare_methodology') or 'For comparison of assembled
+                transcripts with reference transcripts, Gffcompare utility was run taking the reference GTF and the
+                string-tie merged GTF file. This produces an output file, which adds to each transcript a "class code"
+                and the name of the transcript from the reference annotation file to check how the predicted transcripts
+                relate to an annotation file.' }}</p>
+
+            {% if gffcompare_codes_src %}
+            <div class="figure">
+                <img src="{{ gffcompare_codes_src }}" alt="Gffcompare class codes" />
+                <p class="caption">Figure 9.1: Different class codes and their descriptions (<a
+                        href="https://ccb.jhu.edu/software/stringtie/gffcompare.shtml"
+                        target="_blank">https://ccb.jhu.edu/software/stringtie/gffcompare.shtml</a>)</p>
+            </div>
+            {% endif %}
+
+            <h3>9.2 Identification of novel isoform transcripts</h3>
+            <p>{{ static_snippets.get('assembly', {}).get('novel_isoforms') or 'To identify novel isoform transcripts
+                not present in the reference GTF file, gffcompare utility was run taking the reference GTF and the
+                string-tie merged GTF file. Class code "j" means that predicted transcript is a potential novel isoform
+                that shares at least one splice junction with a reference transcript.' }}</p>
+
+            {% if isoforms_figure_src %}
+            <div class="figure">
+                <img src="{{ isoforms_figure_src }}" alt="Novel isoforms illustration" />
+                <p class="caption">Novel isoforms (representative illustration)</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 10 -->
+        <div id="section-10" class="section">
+            <h2>10 Differential Expression</h2>
+            <p>{{ static_snippets.get('dge', {}).get('intro') or '' }}</p>
+
+            <h3>Comparison information</h3>
+            <div class="table-wrapper">
+                <div class="table-title">Table 10.1: Comparison information</div>
+                {% set dge_cmp = dge_comparison_table if dge_comparison_table else static_snippets.get('dge',
+                {}).get('comparison_info_table', {}) %}
+                {% set dge_cmp_rows = dge_cmp.get('rows', []) if dge_cmp else [] %}
+                <table>
+                    <thead>
+                        <tr>
+                            {% for h in dge_cmp.get('headers', []) %}
+                            <th>{{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if dge_cmp_rows and dge_cmp_rows|length > 0 %}
+                        {% for r in dge_cmp_rows %}
+                        <tr>
+                            <td>{{ r[0] }}</td>
+                            <td>{{ r[1] }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="2">Comparison table unavailable</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Group wise sample information</h3>
+            <div class="table-wrapper">
+                <div class="table-title">Table 10.2: Sample description</div>
+                {% set dge_grp = dge_group_table if dge_group_table else static_snippets.get('dge',
+                {}).get('group_sample_table', {}) %}
+                {% set dge_grp_rows = dge_grp.get('rows', []) if dge_grp else [] %}
+                <table>
+                    <thead>
+                        <tr>
+                            {% for h in dge_grp.get('headers', []) %}
+                            <th>{{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if dge_grp_rows and dge_grp_rows|length > 0 %}
+                        {% for r in dge_grp_rows %}
+                        <tr>
+                            <td>{{ r[0] }}</td>
+                            <td>{{ r[1] }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="2">Group table unavailable</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p>{{ static_snippets.get('dge', {}).get('deseq2_intro') or '' }}</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 10.3: Column description of DESeq2 output</div>
+                {% set dge_cols = static_snippets.get('dge', {}).get('deseq2_columns_table', {}) %}
+                {% set dge_cols_rows = dge_cols.get('rows', []) if dge_cols else [] %}
+                {% if dge_cols_rows and dge_cols_rows|length > 0 %}
+                <table>
+                    <thead>
+                        <tr>
+                            {% for h in dge_cols.get('headers', []) %}
+                            <th>{{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in dge_cols_rows %}
+                        <tr>
+                            <td>{{ r[0] }}</td>
+                            <td>{{ r[1] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+
+            <p>{{ static_snippets.get('dge', {}).get('criteria_intro') or '' }}</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 10.4: Criteria used to identify upregulated and downregulated genes and
+                    assigning the significance</div>
+                {% set dge_crit = static_snippets.get('dge', {}).get('criteria_table', {}) %}
+                {% set dge_crit_rows = dge_crit.get('rows', []) if dge_crit else [] %}
+                {% if dge_crit_rows and dge_crit_rows|length > 0 %}
+                <table>
+                    <thead>
+                        <tr>
+                            {% for h in dge_crit.get('headers', []) %}
+                            <th>{{ h }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in dge_crit_rows %}
+                        <tr>
+                            <td>{{ r[0] }}</td>
+                            <td>{{ r[1] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+
+            <p>{{ static_snippets.get('dge', {}).get('stats_note') or '' }}</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 10.5: Differential gene expression statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Comparison</th>
+                            <th>Total DEGs</th>
+                            <th>Sig. Down</th>
+                            <th>Sig. Up</th>
+                            <th>Total Significant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in diff_expr_stats %}
+                        <tr>
+                            <td>{{ d.comparison }}</td>
+                            <td>{{ d.total_degs }}</td>
+                            <td>{{ d.sig_down }}</td>
+                            <td>{{ d.sig_up }}</td>
+                            <td class="font-bold">{{ d.total_sig }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p>{{ static_snippets.get('dge', {}).get('annotation_note') or '' }}</p>
+
+            {% if dge_figures and dge_figures|length > 0 %}
+            <h3>10.1 MA Plot for differentially expressed genes</h3>
+            <p>{{ static_snippets.get('dge', {}).get('ma_plot_text') or '' }}</p>
+
+            <h3>10.2 Volcano plot for differentially expressed genes</h3>
+            <p>{{ static_snippets.get('dge', {}).get('volcano_plot_text') or '' }}</p>
+
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Select a comparison to view
+                interactive MA and Volcano plots.</p>
+
+            <!-- Comparison Selector -->
+            <div class="comp-toggles" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for fig in dge_figures %}
+                <button class="chart-btn comp-btn {% if loop.first %}active{% endif %}"
+                    onclick="showComparison('{{ fig.comparison }}')" data-comparison="{{ fig.comparison }}"
+                    style="padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; color: var(--text-main); border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    {{ fig.comparison }}
+                </button>
+                {% endfor %}
+            </div>
+
+            <!-- Plots Container -->
+            {% for fig in dge_figures %}
+            <div id="plot-{{ fig.comparison }}" class="comparison-plots {% if not loop.first %}hidden{% endif %}"
+                style="margin-bottom: 30px;">
+
+                {% if fig.plot_data_json %}
+                <script type="application/json" id="plotdata-{{ fig.comparison }}">{{ fig.plot_data_json }}</script>
+                {% endif %}
+
+                <h4 style="color: var(--primary); margin-bottom: 16px; font-size: 14px;">
+                    Comparison: {{ fig.comparison }}
+                </h4>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- MA Plot -->
+                    <div class="card"
+                        style="border: 1px solid var(--border-light); border-radius: 4px; overflow: hidden;">
+                        <div style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid var(--border-light);
+                                    display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; font-size: 12px;">MA Plot</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="chart-btn" onclick="expandPlot('ma-{{ fig.comparison }}')" title="Expand"
+                                    style="padding: 4px 8px; font-size: 10px; background: #fff; border: 1px solid #ddd;">⛶</button>
+                                <a href="{{ fig.ma_volcano_pdf_src }}" target="_blank" class="chart-btn"
+                                    title="Download PDF"
+                                    style="padding: 4px 8px; font-size: 10px; background: #fff; border: 1px solid #ddd; text-decoration: none;">⬇</a>
+                            </div>
+                        </div>
+                        <div style="height: 350px; padding: 15px;">
+                            {% if fig.ma_plot_data %}
+                            <canvas id="ma-{{ fig.comparison }}" class="ma-plot-canvas"></canvas>
+                            {% else %}
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; 
+                                        background: #f8f9fa; border-radius: 4px;">
+                                <a href="{{ fig.ma_volcano_pdf_src }}" target="_blank" class="pdf-link" style="padding: 12px 24px; background: var(--primary); color: white; 
+                                          text-decoration: none; border-radius: 4px; font-size: 13px;">
+                                    View MA Plot (PDF)
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Volcano Plot -->
+                    <div class="card"
+                        style="border: 1px solid var(--border-light); border-radius: 4px; overflow: hidden;">
+                        <div style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid var(--border-light);
+                                    display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; font-size: 12px;">Volcano Plot</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="chart-btn" onclick="expandPlot('volcano-{{ fig.comparison }}')"
+                                    title="Expand"
+                                    style="padding: 4px 8px; font-size: 10px; background: #fff; border: 1px solid #ddd;">⛶</button>
+                                <a href="{{ fig.ma_volcano_pdf_src }}" target="_blank" class="chart-btn"
+                                    title="Download PDF"
+                                    style="padding: 4px 8px; font-size: 10px; background: #fff; border: 1px solid #ddd; text-decoration: none;">⬇</a>
+                            </div>
+                        </div>
+                        <div style="height: 350px; padding: 15px;">
+                            {% if fig.volcano_plot_data %}
+                            <canvas id="volcano-{{ fig.comparison }}" class="volcano-plot-canvas"></canvas>
+                            {% else %}
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; 
+                                        background: #f8f9fa; border-radius: 4px;">
+                                <a href="{{ fig.ma_volcano_pdf_src }}" target="_blank" class="pdf-link" style="padding: 12px 24px; background: var(--primary); color: white; 
+                                          text-decoration: none; border-radius: 4px; font-size: 13px;">
+                                    View Volcano Plot (PDF)
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap -->
+                {% if fig.heatmap_png_src %}
+                <div class="figure" style="margin-top: 20px;">
+                    <div style="border: 1px solid var(--border-light); border-radius: 4px; overflow: hidden;">
+                        <div
+                            style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid var(--border-light);">
+                            <span style="font-weight: 600; font-size: 12px;">Expression Heatmap - {{ fig.comparison
+                                }}</span>
+                        </div>
+                        <div style="padding: 15px;">
+                            <img src="{{ fig.heatmap_png_src }}" alt="{{ fig.comparison }} heatmap"
+                                style="max-width: 100%; height: auto;" />
+                        </div>
+                    </div>
+                    <p class="caption">Heatmap of significantly differentially expressed genes for {{ fig.comparison }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <script>
+                const __dgeCharts = { ma: {}, volcano: {} };
+
+                function __getPlotData(comp) {
+                    const el = document.getElementById('plotdata-' + comp);
+                    if (!el) return null;
+                    try {
+                        return JSON.parse(el.textContent || '');
+                    } catch (e) {
+                        return null;
+                    }
+                }
+
+                function __makeScatterChart(canvasId, titleText, datasets, xLabel, yLabel) {
+                    const canvas = document.getElementById(canvasId);
+                    if (!canvas) return null;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return null;
+
+                    return new Chart(ctx, {
+                        type: 'scatter',
+                        data: { datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'top' },
+                                title: { display: false, text: titleText }
+                            },
+                            scales: {
+                                x: { title: { display: true, text: xLabel } },
+                                y: { title: { display: true, text: yLabel } }
+                            },
+                            elements: {
+                                point: { radius: 2, hoverRadius: 4 }
+                            }
+                        }
+                    });
+                }
+
+                function __renderComparisonPlots(comp) {
+                    const data = __getPlotData(comp);
+                    if (!data) return;
+
+                    // MA plot
+                    const maCanvasId = 'ma-' + comp;
+                    if (data.ma && !__dgeCharts.ma[comp] && document.getElementById(maCanvasId)) {
+                        const ds = [];
+                        if (data.ma.ns && data.ma.ns.length) ds.push({ label: 'Not Sig', data: data.ma.ns, backgroundColor: 'rgba(156,163,175,0.45)' });
+                        if (data.ma.down && data.ma.down.length) ds.push({ label: 'Down', data: data.ma.down, backgroundColor: 'rgba(59,130,246,0.65)' });
+                        if (data.ma.up && data.ma.up.length) ds.push({ label: 'Up', data: data.ma.up, backgroundColor: 'rgba(239,68,68,0.65)' });
+                        __dgeCharts.ma[comp] = __makeScatterChart(maCanvasId, 'MA Plot', ds, 'logCPM', 'log2FC');
+                    }
+
+                    // Volcano plot
+                    const volCanvasId = 'volcano-' + comp;
+                    if (data.volcano && !__dgeCharts.volcano[comp] && document.getElementById(volCanvasId)) {
+                        const ds = [];
+                        if (data.volcano.ns && data.volcano.ns.length) ds.push({ label: 'Not Sig', data: data.volcano.ns, backgroundColor: 'rgba(156,163,175,0.45)' });
+                        if (data.volcano.down && data.volcano.down.length) ds.push({ label: 'Down', data: data.volcano.down, backgroundColor: 'rgba(59,130,246,0.65)' });
+                        if (data.volcano.up && data.volcano.up.length) ds.push({ label: 'Up', data: data.volcano.up, backgroundColor: 'rgba(239,68,68,0.65)' });
+                        __dgeCharts.volcano[comp] = __makeScatterChart(volCanvasId, 'Volcano Plot', ds, 'log2FC', '-log10(p)');
+                    }
+                }
+
+                function showComparison(comp) {
+                    // Hide all plot containers
+                    document.querySelectorAll('.comparison-plots').forEach(el => {
+                        el.classList.add('hidden');
+                    });
+
+                    // Show selected
+                    const target = document.getElementById('plot-' + comp);
+                    if (target) target.classList.remove('hidden');
+
+                    // Update button active state
+                    document.querySelectorAll('.comp-toggles .comp-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.comparison === comp);
+                    });
+
+                    // Render charts lazily
+                    __renderComparisonPlots(comp);
+                }
+
+                function expandPlot(canvasId) {
+                    const canvas = document.getElementById(canvasId);
+                    if (canvas) {
+                        // Simple expand - open in new window
+                        const win = window.open('', '_blank');
+                        win.document.write('<html><head><title>Plot</title></head><body style="margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh;">');
+                        win.document.write('<img src="' + canvas.toDataURL() + '" style="max-width:100%; max-height:100vh;"/>');
+                        win.document.write('</body></html>');
+                    }
+                }
+
+                // Render first comparison (if any)
+                (function initFirstDgeComparison() {
+                    const firstBtn = document.querySelector('.comp-toggles .comp-btn');
+                    if (firstBtn && firstBtn.dataset && firstBtn.dataset.comparison) {
+                        __renderComparisonPlots(firstBtn.dataset.comparison);
+                    }
+                })();
+            </script>
+            {% endif %}
+        </div>
+
+        <!-- Section 11 -->
+        <div id="section-11" class="section">
+            <h2>11 Functional Annotation</h2>
+
+            <h3>11.1 Pathway analysis for significant DGE</h3>
+            <p>Mapping of significantly differentially expressed transcripts to biological pathways was performed using
+                <strong>KEGG-KAAS</strong>. Results represent metabolic pathways of major biomolecules.
+            </p>
+
+            <div class="table-wrapper">
+                <div class="table-title">Table 11.2: KEGG Pathway Statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Level 1 Category</th>
+                            <th>Level 2 Sub-Category</th>
+                            <th>Gene Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pathway_stats %}
+                        <tr>
+                            <td>{{ p.level1 }}</td>
+                            <td>{{ p.level2 }}</td>
+                            <td>{{ p.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>11.2 Gene Ontology (GO) Distribution</h3>
+            <p>Functional categorization of differentially expressed genes was performed using Gene Ontology (GO)
+                consisting of three main branches: Biological Process (BP), Molecular Function (MF), and Cellular
+                Component (CC).</p>
+            <div class="table-wrapper">
+                <div class="table-title">Table 11.3: GO Distribution Statistics</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ontology</th>
+                            <th>Term</th>
+                            <th>Gene Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for g in go_distribution %}
+                        <tr>
+                            <td>{{ g.ontology }}</td>
+                            <td>{{ g.term }}</td>
+                            <td>{{ g.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if func_assets and func_assets.kegg_pathway_image_src %}
+            <div class="figure">
+                <img src="{{ func_assets.kegg_pathway_image_src }}" alt="KEGG pathway" />
+                <p class="caption">Representative KEGG pathway image</p>
+            </div>
+            {% endif %}
+
+            {% if pathway_ex_figure_src and (not func_assets or not func_assets.kegg_pathway_image_src) %}
+            <div class="figure">
+                <img src="{{ pathway_ex_figure_src }}" alt="KEGG pathway example" />
+                <p class="caption">Representative pathway example</p>
+            </div>
+            {% endif %}
+
+            {% if func_assets and func_assets.kegg_results_preview and func_assets.kegg_results_preview|length > 0 %}
+            <h3>KEGG Enrichment (preview)</h3>
+            {% if func_assets.kegg_results_xlsx %}
+            <div class="figure">
+                <a class="pdf-link" href="{{ func_assets.kegg_results_xlsx }}" target="_blank"
+                    rel="noopener noreferrer">Open KEGG enrichment results (XLSX)</a>
+            </div>
+            {% endif %}
+            <div class="table-wrapper">
+                <div class="table-title">Top enriched KEGG pathways (first 10 rows)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            {% for col in func_assets.kegg_results_preview[0].keys() %}
+                            <th>{{ col }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in func_assets.kegg_results_preview %}
+                        <tr>
+                            {% for col in func_assets.kegg_results_preview[0].keys() %}
+                            <td>{{ row[col] }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if func_assets and func_assets.enrichment_image_src %}
+            <div class="figure">
+                <img src="{{ func_assets.enrichment_image_src }}" alt="Enrichment plot" />
+                <p class="caption">Representative enrichment plot</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 12 Deliverables -->
+        <div id="section-12" class="section">
+            <h2>12 Deliverables</h2>
+            <p>The following deliverables are provided with this report:</p>
+            <ul>
+                <li>Raw Data (FastQ)</li>
+                <li>Clean Data</li>
+                <li>Reference Genome & GFF</li>
+                <li>BAM Alignment Files</li>
+                <li>Gene Count Matrix</li>
+                <li>Differential Expression Results</li>
+                <li>GO & KEGG Enrichment Results</li>
+            </ul>
+
+            <h3>Project Directory Structure</h3>
+            <div class="tree-container"
+                style="background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 15px; font-family: 'Courier New', monospace; font-size: 10pt; line-height: 1.4; white-space: pre-wrap; overflow-x: auto;">
+                {{ deliverables_tree }}
+            </div>
+        </div>
+
+    </div>
+
+    <script type="application/json" id="library-sizes-json">{{ library_sizes | tojson }}</script>
+    <script type="application/json" id="samples-json">{{ samples | tojson }}</script>
+    <script>
+        // Data passed from Python
+        const librarySizes = JSON.parse(document.getElementById('library-sizes-json').textContent);
+        const sampleLabels = JSON.parse(document.getElementById('samples-json').textContent);
+        // Initialize QC Chart
+        if (document.getElementById('qcChart')) {
+            const ctxQC = document.getElementById('qcChart').getContext('2d');
+            new Chart(ctxQC, {
+                type: 'bar',
+                data: {
+                    labels: sampleLabels,
+                    datasets: [{
+                        label: 'Mean Library Size (bp)',
+                        data: librarySizes,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Size (bp)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // DGE comparison bar chart intentionally removed (static narrative + tables only).
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+                window.addEventListener('scroll', () => {
+                    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+                    progressBar.style.width = scrolled + "%";
+                });
+            }
+
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('#TOC li a');
+            if (sections.length && navLinks.length) {
+                window.addEventListener('scroll', () => {
+                    let current = "";
+                    sections.forEach(section => {
+                        const sectionTop = section.offsetTop;
+                        if (pageYOffset >= (sectionTop - 120)) {
+                            current = section.getAttribute('id');
+                        }
+                    });
+
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${current}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                });
+            }
+
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            document.querySelectorAll('.table-wrapper').forEach(wrapper => {
+                const table = wrapper.querySelector('table');
+                if (!table) return;
+
+                const rows = table.querySelectorAll('tbody tr');
+                if (rows.length < 3) return;
+
+                const searchContainer = document.createElement('div');
+                searchContainer.className = 'table-search-container';
+                searchContainer.innerHTML = `
+                    <i data-lucide="search" style="width:16px; color:var(--text-muted); pointer-events:none;"></i>
+                    <input type="text" class="table-search" placeholder="Search rows...">`;
+                wrapper.insertBefore(searchContainer, table);
+
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons({
+                        attrs: { class: 'lucide-search-icon' },
+                        parent: searchContainer
+                    });
+                }
+
+                const input = searchContainer.querySelector('input');
+                input.addEventListener('keyup', () => {
+                    const filter = input.value.toLowerCase();
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(filter) ? '' : 'none';
+                    });
+                });
+
+                const headers = table.querySelectorAll('th');
+                headers.forEach((header, index) => {
+                    header.classList.add('sortable');
+                    header.addEventListener('click', () => {
+                        const isAsc = header.dataset.sortOrder === 'asc';
+                        const multiplier = isAsc ? -1 : 1;
+
+                        const sortedRows = Array.from(rows).sort((a, b) => {
+                            const aVal = (a.children[index]?.textContent || '').trim();
+                            const bVal = (b.children[index]?.textContent || '').trim();
+
+                            const aNum = parseFloat(aVal.replace(/,/g, ''));
+                            const bNum = parseFloat(bVal.replace(/,/g, ''));
+
+                            if (!isNaN(aNum) && !isNaN(bNum)) return (aNum - bNum) * multiplier;
+                            return aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' }) * multiplier;
+                        });
+
+                        const tbody = table.querySelector('tbody');
+                        sortedRows.forEach(row => tbody.appendChild(row));
+                        header.dataset.sortOrder = isAsc ? 'desc' : 'asc';
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

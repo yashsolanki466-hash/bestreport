@@ -1,0 +1,51 @@
+import { createReadStream } from 'fs';
+import { createInterface } from 'readline';
+import path from 'path';
+
+export interface FastaAssemblyStats {
+  sample: string;
+  num_transcripts: number;
+  total_bp: number;
+  mean_size: number;
+}
+
+/** Stream-compute transcript count and length stats from a FASTA file. */
+export async function parseFastaAssemblyStats(fastaPath: string): Promise<FastaAssemblyStats> {
+  const sample =
+    path.basename(fastaPath, path.extname(fastaPath))
+      .replace(/Aligned_transcript$/i, '')
+      .replace(/_transcript$/i, '')
+      .replace(/\.fasta$/i, '') || path.basename(fastaPath);
+
+  let num_transcripts = 0;
+  let total_bp = 0;
+  let currentLen = 0;
+
+  const rl = createInterface({
+    input: createReadStream(fastaPath, { encoding: 'utf8' }),
+    crlfDelay: Infinity
+  });
+
+  for await (const line of rl) {
+    if (line.startsWith('>')) {
+      if (currentLen > 0) {
+        num_transcripts++;
+        total_bp += currentLen;
+      }
+      currentLen = 0;
+    } else {
+      currentLen += line.trim().length;
+    }
+  }
+  if (currentLen > 0) {
+    num_transcripts++;
+    total_bp += currentLen;
+  }
+
+  return {
+    sample,
+    num_transcripts,
+    total_bp,
+    mean_size: num_transcripts > 0 ? Math.round(total_bp / num_transcripts) : 0
+  };
+}

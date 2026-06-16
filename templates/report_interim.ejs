@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unigenome Interim Report - <%= project_id %></title>
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #F47920;
+            --secondary-color: #1A365D;
+            --accent-color: #3182CE;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --bg-body: #F7FAFC;
+            --bg-sidebar: rgba(255, 255, 255, 0.85);
+            --bg-paper: #FFFFFF;
+            --border-color: #E2E8F0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --glass-blur: blur(12px);
+        }
+
+        /* Table of Contents Style */
+        .toc-list-item {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+        .toc-list-item.sub-item {
+            margin-left: 24px;
+            font-size: 13px;
+            color: #475569;
+        }
+        .toc-item-name {
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+        .toc-list-item.sub-item .toc-item-name {
+            font-weight: normal;
+        }
+        .toc-item-dots {
+            flex-grow: 1;
+            border-bottom: 1px dotted #94a3b8;
+            margin: 0 8px;
+            position: relative;
+            top: -4px;
+        }
+        .toc-item-num {
+            flex-shrink: 0;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        body {
+            font-family: 'Lora', "Times New Roman", serif;
+            font-size: 11pt;
+            line-height: 1.62;
+            color: var(--text-main);
+            background-color: var(--bg-body);
+            margin: 0;
+            padding-left: 280px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
+        h1, h2, h3, h4, .ui-font {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .section {
+            scroll-margin-top: 40px;
+        }
+
+        /* Fixed TOC Sidebar Style (Screen Only) */
+        #TOC {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--bg-sidebar);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-right: 1px solid var(--border-color);
+            padding: 40px 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .toc-header {
+            padding: 0 32px 24px 32px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        #TOC ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #TOC li a {
+            display: block;
+            padding: 12px 32px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border-left: 4px solid transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #TOC li a:hover {
+            color: var(--secondary-color);
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        #TOC li a.active {
+            color: var(--secondary-color);
+            background: rgba(49, 130, 206, 0.08);
+            border-left: 4px solid var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .main-container {
+            margin: 40px auto;
+            padding: 80px 100px;
+            max-width: 1000px;
+            background-color: var(--bg-paper);
+            box-shadow: var(--card-shadow);
+            border-radius: 8px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Cover Page */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            padding: 50px;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+
+        .cover-logo {
+            max-width: 300px;
+            margin-bottom: 40px;
+        }
+
+        .cover-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .cover-subtitle {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 40px;
+        }
+
+        .cover-details {
+            font-size: 16px;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 60px;
+        }
+
+        .submitted-by {
+            margin-top: 25px;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .submitted-to {
+            margin-top: auto;
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Typography */
+        h1.title {
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        h2 {
+            font-size: 22px;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            page-break-after: avoid;
+        }
+
+        h4 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0 30px 0;
+            page-break-inside: avoid;
+        }
+
+        .table-title {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+        }
+
+        table {
+            width: 100%;
+            max-width: 100%;
+            border-spacing: 0;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+            font-size: 11px;
+        }
+
+        table th {
+            padding: 8px 10px;
+            background-color: var(--secondary-color);
+            color: #fff;
+            border: 1px solid var(--secondary-color);
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        table tr:nth-of-type(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Figures */
+        .figure {
+            margin: 30px 0;
+            text-align: center;
+            background: #fff;
+            padding: 10px;
+            page-break-inside: avoid;
+        }
+
+        .figure img {
+            max-width: 100%;
+            max-height: 400px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .caption {
+            font-size: 11px;
+            color: var(--secondary-color);
+            margin-top: 10px;
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        .info-box {
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary-color);
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .tapestation-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .tapestation-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            page-break-inside: avoid;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .tapestation-card img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tapestation-card span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            display: block;
+        }
+
+        /* Print Formatting */
+        @media print {
+            @page {
+                size: A4;
+                margin: 20mm 20mm 20mm 20mm;
+            }
+
+            @page :first {
+                margin: 0;
+            }
+
+            body {
+                background-color: #fff !important;
+                font-size: 10.5pt;
+                line-height: 1.55;
+                margin: 0;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+
+            #TOC {
+                display: none;
+            }
+
+            .main-container {
+                margin: 0 auto;
+                padding: 0;
+                width: 100%;
+                max-width: none;
+                background: transparent;
+                box-shadow: none;
+                border-radius: 0;
+                border: none;
+            }
+
+            .table-wrapper, table, .figure, .tapestation-card {
+                break-inside: avoid;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            h2 {
+                page-break-after: avoid;
+                page-break-before: auto;
+                margin-top: 30px;
+            }
+
+            h3 {
+                page-break-after: avoid;
+                page-break-before: auto;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+
+            .cover-page {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="TOC">
+        <div class="toc-header" style="text-align: center; padding: 20px 15px;">
+            <img src="<%= logo_path %>" alt="Unigenome Logo" style="max-height: 45px; max-width: 100%; object-fit: contain;">
+        </div>
+        <ul style="margin-top: 10px;">
+            <li><a href="#section-1" class="active">1 Project Details & Sample Details</a></li>
+            <li><a href="#section-2">2 Methods</a></li>
+            <li><a href="#section-3">3 Results (RNA QC & Qubit)</a></li>
+            <li><a href="#section-4">4 Library QC (TapeStation)</a></li>
+            <li><a href="#section-5">5 Conclusions</a></li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+                <img src="<%= logo_path %>" alt="Unigenome Logo" style="max-height: 65px; max-width: 250px; object-fit: contain; margin: 0;">
+                <% if (typeof unipath_logo_path !== 'undefined' && unipath_logo_path) { %>
+                    <img src="<%= unipath_logo_path %>" alt="Unipath Logo" style="max-height: 65px; max-width: 250px; object-fit: contain; margin: 0;">
+                <% } %>
+            </div>
+
+            <div>
+                <div class="cover-title">Interim Report of</div>
+                <div class="cover-subtitle">Transcriptome Sequencing & Library Preparation</div>
+                <div class="cover-details">On <%= platform %> Platforms</div>
+                <div class="cover-details" style="font-size: 18px; margin-top: 10px;">Project ID: <%= project_id %></div>
+            </div>
+
+            <div class="submitted-to">
+                <p style="margin-bottom: 5px;">Submitted to:</p>
+                <div style="font-size: 22px; color: var(--primary-color);"><%= client_name %></div>
+                <div style="font-size: 16px; color: #333;"><%= client_org %></div>
+
+                <div class="submitted-by">
+                    <div style="font-weight: bold; margin-top: 18px;">Submitted by:</div>
+                    <div style="font-weight: 700;">Unigenome</div>
+                    <div>A life sciences division of Unipath Specialty Laboratory Ltd.</div>
+                    <div>3rd Floor, PASL House | Beside Sahjanand College | Panjara pol, Ambawadi,</div>
+                    <div>Ahmedabad – 380015 | Gujarat, India</div>
+                    <div>Tel :- +91-79-66197701</div>
+                    <div>genomics@unipath.in | www.unigenome.in</div>
+                </div>
+            </div>
+
+            <div style="width: 100%; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 40px; font-size: 10px; color: #666;">
+                Unigenome | Confidential | <%= project_id %> | <%= report_date %>
+            </div>
+        </div>
+
+        <!-- Table of Contents Page -->
+        <div class="toc-page-container" style="page-break-after: always; padding: 40px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 30px;">
+                <div style="font-size: 10px; color: #475569; line-height: 1.4; max-width: 60%; font-family: 'Inter', sans-serif;">
+                    <strong>Lab Facility:</strong> 2A, 3A, 3B PASL-House, Beside Sahjanand College, Opposite Kamdhenu Complex, Panjara pole, Ambawadi, Ahmedabad-380015, Gujarat<br>
+                    Ph: +91-79-49006800 | WhatsApp: 6356005900 | Email: info@unigenome.in | Website: www.unigenome.in
+                </div>
+                <div style="text-align: right;">
+                    <img src="<%= logo_path %>" alt="Unigenome Logo" style="max-height: 40px; object-fit: contain; margin-bottom: 5px;"><br>
+                    <span style="font-size: 10px; font-family: 'Inter', sans-serif; font-weight: bold; color: #475569;"><%= project_id %> | Date: <%= report_date %></span>
+                </div>
+            </div>
+            
+            <h2 style="text-align: center; border-bottom: none; margin-top: 10px; margin-bottom: 30px; color: var(--secondary-color); font-family: 'Inter', sans-serif; font-weight: 700;">Table of Content</h2>
+            
+            <div style="margin: 20px 0; font-family: 'Inter', sans-serif; padding: 0 10px;">
+                <a href="#section-1" class="toc-list-item">
+                    <span class="toc-item-name">1. Project Details & Sample Details</span>
+                    <span class="toc-item-dots"></span>
+                    <span class="toc-item-num">3</span>
+                </a>
+                <a href="#section-2" class="toc-list-item">
+                    <span class="toc-item-name">2. Methods</span>
+                    <span class="toc-item-dots"></span>
+                    <span class="toc-item-num">4</span>
+                </a>
+                <a href="#section-3" class="toc-list-item">
+                    <span class="toc-item-name">3. Results (RNA QC & Qubit)</span>
+                    <span class="toc-item-dots"></span>
+                    <span class="toc-item-num">5</span>
+                </a>
+                <a href="#section-4" class="toc-list-item">
+                    <span class="toc-item-name">4. Library QC (TapeStation)</span>
+                    <span class="toc-item-dots"></span>
+                    <span class="toc-item-num">6</span>
+                </a>
+                <a href="#section-5" class="toc-list-item">
+                    <span class="toc-item-name">5. Conclusions</span>
+                    <span class="toc-item-dots"></span>
+                    <span class="toc-item-num">7</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div id="section-1" class="section">
+            <h2>1. Project Details & Sample Details</h2>
+            <p>This interim report outlines the status of RNA extraction, quality control, and library preparation for the project <%= project_id %>.</p>
+            
+            <div class="table-wrapper">
+                <div class="table-title">Table 1.1: Project Specifications</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Service Type</strong></td>
+                            <td><%= service_type || 'Transcriptome Sequencing' %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Platform</strong></td>
+                            <td><%= platform %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Read Length</strong></td>
+                            <td><%= read_length || '2 X 150 PE' %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Throughput</strong></td>
+                            <td><%= data_throughput || '~06GB / Sample' %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Type of Sample</strong></td>
+                            <td><%= sample_type || 'Leaf' %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>No. of Samples</strong></td>
+                            <td><%= sample_count %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Samples ID of Libraries Prepared</strong></td>
+                            <td style="word-break: break-word;"><%= samples.join(', ') %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shipping Condition</strong></td>
+                            <td><%= shipping_condition || 'NA' %></td>
+                        </tr>
+                        <tr>
+                            <td><strong>No. of Libraries Prepared</strong></td>
+                            <td><%= no_of_libraries_prepared || sample_count %></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div id="section-2" class="section">
+            <h2>2. Methods</h2>
+
+            <h3>2.1 <%= static_snippets.wet_lab?.rna_isolation_qc_header || 'Extraction and Quantitative analysis of RNA:' %></h3>
+            <p><%= static_snippets.wet_lab?.rna_isolation_qc || 'RNA was extracted from samples using standard methods. RNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed on 1% agarose gel.' %></p>
+
+            <h3>2.2 <%= static_snippets.wet_lab?.library_preparation_header || 'Preparation of Library:' %></h3>
+            <p><%= static_snippets.wet_lab?.library_preparation || 'The paired-end sequencing library was prepared using KAPA mRNA HyperPrep Kit for Illumina. mRNA enrichment was performed, fragmented, and subjected to cDNA synthesis and adapter ligation.' %></p>
+
+            <h3>2.3 <%= static_snippets.wet_lab?.library_qc_header || 'Quantity and Quality Check (QC) of Library on Agilent Tape Station 4150:' %></h3>
+            <p><%= static_snippets.wet_lab?.library_qc || 'The amplified libraries were analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape&reg; as per manufacturer&rsquo;s instructions.' %></p>
+
+            <% if (static_snippets.wet_lab?.cluster_generation && static_snippets.wet_lab.cluster_generation.trim()) { %>
+            <h3>2.4 <%= static_snippets.wet_lab.cluster_generation_header || 'Cluster Generation and Sequencing:' %></h3>
+            <p><%= static_snippets.wet_lab.cluster_generation %></p>
+            <% } %>
+        </div>
+
+        <!-- Section 3 -->
+        <div id="section-3" class="section">
+            <h2>3. Results</h2>
+
+            <h3>3.1 RNA QC using Agarose Gel</h3>
+            <p>RNA quality was validated using 1% Agarose Gel electrophoresis to ensure intact ribosomal RNA bands (28S and 18S).</p>
+            
+            <% if (gel_image_src) { %>
+            <div class="figure">
+                <img src="<%= gel_image_src %>" alt="RNA QC Agarose Gel" />
+                <p class="caption">Image 01: RNA QC on 1% agarose gel</p>
+            </div>
+            <% } %>
+
+            <% if (lane_mapping && lane_mapping.headers && lane_mapping.rows && lane_mapping.rows.length > 0) { %>
+            <div class="table-wrapper">
+                <div class="table-title">Lane ID to Sample Name Mapping</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <% lane_mapping.headers.forEach(function(h) { %>
+                            <th><%= h %></th>
+                            <% }); %>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% lane_mapping.rows.forEach(function(row) { %>
+                        <tr>
+                            <% row.forEach(function(cell) { %>
+                            <td><%= cell %></td>
+                            <% }); %>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+            <% } %>
+
+            <h3>3.2 Qubit Quantification Data</h3>
+            <div class="table-wrapper">
+                <div class="table-title">Table 3.2: RNA Quantification (Qubit)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.N</th>
+                            <th>Sample ID</th>
+                            <th>Conc. (ng/µl)</th>
+                            <th>Volume (µl)</th>
+                            <th>Yield (µg)</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (qubit_data && qubit_data.length > 0) { %>
+                            <% qubit_data.forEach(function(q, i) { %>
+                            <tr>
+                                <td><%= i + 1 %></td>
+                                <td><%= q.sample_id %></td>
+                                <td><%= q.conc %></td>
+                                <td><%= q.vol %></td>
+                                <td><%= q.yield %></td>
+                                <td><%= q.remarks %></td>
+                             </tr>
+                             <% }); %>
+                        <% } else { %>
+                        <tr>
+                            <td colspan="6">No Qubit data available</td>
+                        </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div id="section-4" class="section">
+            <h2>4. Quantity and quality check (QC) of library on Agilent Tape Station 4150</h2>
+            
+            <h3>4.1 TapeStation 4150 Profiles of Library:</h3>
+            <p>Agilent High Sensitivity D1000 ScreenTape® profiles for prepared libraries are shown below:</p>
+
+            <% if (tapestation_images && tapestation_images.length > 0) { %>
+            <div class="tapestation-grid">
+                <% tapestation_images.forEach(function(img, index) { %>
+                <div class="tapestation-card">
+                    <img src="<%= img.src %>" alt="TapeStation <%= img.sample_id %>" />
+                    <span>Profile <%= index + 1 %>: <%= img.sample_id %></span>
+                </div>
+                <% }); %>
+            </div>
+            <% } else { %>
+            <p><em>TapeStation profile images not supplied or embedded.</em></p>
+            <% } %>
+        </div>
+
+        <!-- Section 5 -->
+        <div id="section-5" class="section">
+            <h2>5. <%= static_snippets.wet_lab?.conclusions_header || 'Conclusions' %></h2>
+            <ul>
+                <% if (conclusions && conclusions.length > 0) { %>
+                    <% conclusions.forEach(function(c) { %>
+                    <li><%= c %></li>
+                    <% }); %>
+                <% } else { %>
+                    <li>The libraries were prepared from the samples by <%= library_kit || 'KAPA mRNA HyperPrep Kit for Illumina (CAT #KK8581)' %>.</li>
+                    <li>The average size of libraries is in range of <%= size_range || '330bp to 360bp' %> for all samples.</li>
+                    <li>The libraries will be sequenced on <%= platform %> platform using <%= chemistry || '2x150 bp PE' %> chemistry.</li>
+                <% } %>
+            </ul>
+            <p style="margin-top: 40px; font-weight: bold; text-align: center;">[END OF INTERIM REPORT]</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Active section highlighter on scroll
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('#TOC ul li a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+            // Default to first section when near top
+            if (window.scrollY < 200 && navLinks.length > 0) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                navLinks[0].classList.add('active');
+            }
+        });
+    </script>
+
+</body>
+
+</html>

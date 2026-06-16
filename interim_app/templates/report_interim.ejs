@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unigenome Interim Report - <%= project_id %></title>
+
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Premium Scientific Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* ---------------------------------------------------
+           1. CSS VARIABLES & THEME SETTINGS
+        --------------------------------------------------- */
+        :root {
+            /* Color Palette (Scientific & Professional) */
+            --color-text-main: #1f2937;
+            --color-text-muted: #4b5563;
+            --color-heading: #111827;
+            --color-bg-page: #f9fafb;
+            --color-bg-paper: #ffffff;
+            --color-accent: #0f4c81; /* Classic Blue */
+            --color-accent-hover: #0a365c;
+            --color-border: #e5e7eb;
+            --color-border-dark: #000000;
+            
+            /* Typography */
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-serif: 'Source Serif 4', Georgia, serif;
+            
+            /* Chart Colors (Colorblind Safe) */
+            --chart-up: rgba(230, 97, 0, 0.85);   /* Accessible Orange */
+            --chart-down: rgba(93, 58, 155, 0.85); /* Accessible Purple */
+            
+            /* Layout */
+            --sidebar-width: 320px;
+            --content-max-width: 900px;
+        }
+
+        /* ---------------------------------------------------
+           2. RESET & BASE STYLES
+        --------------------------------------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-serif);
+            color: var(--color-text-main);
+            background-color: var(--color-bg-page);
+            line-height: 1.7;
+            font-size: 1.125rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* Academic Numbering Counters */
+            counter-reset: section figure table;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-sans);
+            color: var(--color-heading);
+            line-height: 1.3;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            text-align: justify;
+        }
+
+        a {
+            color: var(--color-accent);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--color-accent-hover);
+            text-decoration: underline;
+        }
+
+        /* ---------------------------------------------------
+           3. LAYOUT STRUCTURE
+        --------------------------------------------------- */
+        .layout-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar / TOC */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--color-bg-paper);
+            border-right: 1px solid var(--color-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2.5rem 2rem;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            font-family: var(--font-sans);
+            font-weight: 800;
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--color-heading);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toc-nav {
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+        }
+
+        .toc-nav ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc-nav > ul > li {
+            margin-bottom: 0.75rem;
+        }
+
+        .toc-nav ul ul {
+            padding-left: 1.25rem;
+            margin-top: 0.5rem;
+            border-left: 1px solid var(--color-border);
+            margin-left: 0.5rem;
+        }
+
+        .toc-nav a {
+            color: var(--color-text-muted);
+            text-decoration: none;
+            display: block;
+            padding: 0.25rem 0;
+            transition: all 0.2s;
+        }
+
+        .toc-nav li.active > a, 
+        .toc-nav a:hover {
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 3rem 4rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .paper-container {
+            width: 100%;
+            max-width: var(--content-max-width);
+            background-color: var(--color-bg-paper);
+            padding: 5rem 6rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+
+        /* ---------------------------------------------------
+           4. COVER PAGE (EXECUTIVE LEVEL)
+        --------------------------------------------------- */
+        .cover-page {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-bottom: 2px solid var(--color-border-dark);
+            margin-bottom: 4rem;
+            padding-bottom: 4rem;
+            position: relative;
+        }
+        
+        .cover-logos {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .cover-meta {
+            font-family: var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            margin-bottom: 1.5rem;
+            border-left: 3px solid var(--color-accent);
+            padding-left: 1rem;
+        }
+
+        .cover-title {
+            font-size: 3.5rem;
+            line-height: 1.1;
+            margin-top: 0;
+            margin-bottom: 3rem;
+            letter-spacing: -0.02em;
+        }
+
+        .cover-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            font-family: var(--font-sans);
+            margin-top: auto;
+        }
+
+        .cover-details h3 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            color: var(--color-text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        .cover-details p {
+            font-family: var(--font-sans);
+            font-size: 1.125rem;
+            color: var(--color-heading);
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        /* ---------------------------------------------------
+           5. SECTION FORMATTING & ACADEMIC STYLING
+        --------------------------------------------------- */
+        section {
+            margin-bottom: 5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h2.section-title {
+            counter-reset: subsection;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 0.5rem;
+            margin-top: 4rem;
+            font-size: 2rem;
+        }
+
+        h2.section-title::before {
+            counter-increment: section;
+            content: counter(section) ". ";
+        }
+
+        h3.subsection-title {
+            font-size: 1.5rem;
+        }
+
+        h3.subsection-title::before {
+            counter-increment: subsection;
+            content: counter(section) "." counter(subsection) ". ";
+        }
+
+        /* Drop Caps for opening paragraphs */
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 0.75rem;
+            padding-top: 0.5rem;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        /* ---------------------------------------------------
+           6. PUBLICATION-QUALITY FIGURES & CHARTS
+        --------------------------------------------------- */
+        figure {
+            margin: 3rem 0;
+            counter-increment: figure;
+        }
+
+        .figure-container {
+            border: 1px solid var(--color-border);
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .figure-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        figcaption {
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--color-text-main);
+            text-align: justify;
+        }
+
+        figcaption strong {
+            color: var(--color-heading);
+        }
+
+        figcaption strong::before {
+            content: "Figure " counter(figure) ". ";
+        }
+
+        /* ---------------------------------------------------
+           7. ACADEMIC TABLES
+        --------------------------------------------------- */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 3rem 0;
+            counter-increment: table;
+        }
+
+        .scientific-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            text-align: left;
+            border-top: 2px solid var(--color-border-dark);
+            border-bottom: 2px solid var(--color-border-dark);
+        }
+
+        .scientific-table caption {
+            caption-side: top;
+            text-align: left;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            color: var(--color-text-main);
+        }
+
+        .scientific-table caption strong {
+            color: var(--color-heading);
+        }
+
+        .scientific-table caption strong::before {
+            content: "Table " counter(table) ". ";
+        }
+
+        .scientific-table th {
+            border-bottom: 1px solid var(--color-border-dark);
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--color-heading);
+            vertical-align: bottom;
+        }
+
+        .scientific-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: top;
+        }
+
+        .scientific-table tbody tr:nth-child(even) {
+            background-color: rgba(249, 250, 251, 0.5); /* Subtle zebra */
+        }
+
+        .scientific-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ---------------------------------------------------
+           8. DASHBOARD METRICS (EXECUTIVE CARDS)
+        --------------------------------------------------- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2.5rem 0;
+            font-family: var(--font-sans);
+        }
+
+        .metric-card {
+            background: #fff;
+            border: 1px solid var(--color-border);
+            padding: 1.5rem;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            border-top: 3px solid var(--color-accent);
+        }
+
+        .metric-title {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-heading);
+            line-height: 1;
+        }
+
+        /* ---------------------------------------------------
+           9. UI CONTROLS & RESPONSIVENESS
+        --------------------------------------------------- */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .btn-floating {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--color-heading);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+        }
+
+        .btn-floating:hover {
+            background-color: var(--color-accent);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 1200px) {
+            .paper-container {
+                padding: 4rem 3rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .layout-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                padding: 1.5rem 2rem;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cover-title {
+                font-size: 2.5rem;
+            }
+            .cover-details {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .paper-container {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* ---------------------------------------------------
+           10. PRINT & PDF EXPORT OPTIMIZATION
+        --------------------------------------------------- */
+        @media print {
+            body {
+                background: white;
+                font-size: 11pt;
+            }
+            .sidebar, .controls {
+                display: none !important;
+            }
+            .main-content {
+                margin: 0;
+                padding: 0;
+            }
+            .paper-container {
+                box-shadow: none;
+                max-width: none;
+                width: 100%;
+                padding: 0;
+            }
+            .cover-page {
+                min-height: auto;
+                page-break-after: always;
+                padding-top: 2in;
+            }
+            section {
+                page-break-inside: auto;
+            }
+            h2.section-title {
+                page-break-after: avoid;
+            }
+            figure, .table-wrapper, .metric-card {
+                page-break-inside: avoid;
+            }
+            a {
+                text-decoration: none;
+                color: black;
+            }
+            @page {
+                margin: 2.5cm;
+                size: A4;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layout-container">
+        
+        <!-- SIDEBAR / TABLE OF CONTENTS -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="<%= logo_path %>" alt="Unigenome Logo" style="height: 32px;">
+            </div>
+            <nav class="toc-nav" id="toc-nav">
+                <ul>
+                    <li><a href="#cover">Cover Page</a></li>
+                    <li><a href="#section-1">1. Project Details</a></li>
+                    <li><a href="#section-2">2. Methods</a></li>
+                    <li><a href="#section-3">3. Results (RNA QC)</a></li>
+                    <li><a href="#section-4">4. Library QC</a></li>
+                    <li><a href="#section-5">5. Conclusions</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- MAIN PAPER CONTENT -->
+        <main class="main-content">
+            <div class="paper-container">
+
+                <!-- COVER PAGE -->
+                <section id="cover" class="cover-page">
+                    <div class="cover-logos">
+                        <img src="<%= logo_path %>" alt="Unigenome Logo" style="height: 60px;">
+                        <% if (typeof unipath_logo_path !== 'undefined' && unipath_logo_path) { %>
+                            <div style="width: 1px; height: 40px; background: #e5e7eb; margin: 0 20px;"></div>
+                            <img src="<%= unipath_logo_path %>" alt="Unipath Logo" style="height: 55px;">
+                        <% } %>
+                    </div>
+                    <div class="cover-meta">Project ID: <%= project_id %> • Interim QC Report</div>
+                    <h1 class="cover-title">Whole Transcriptome<br>QC & Library Prep</h1>
+                    
+                    <div class="cover-details">
+                        <div>
+                            <h3>Prepared For</h3>
+                            <p><%= client_name %></p>
+                            <p><%= client_org %></p>
+                        </div>
+                        <div>
+                            <h3>Prepared By</h3>
+                            <p>Unigenome Analytics Team</p>
+                            <p><%= report_date %></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 1 -->
+                <section id="section-1">
+                    <h2 class="section-title">Project Details & Sample Details</h2>
+                    <p class="drop-cap">This interim report outlines the status of RNA extraction, quality control, and library preparation for the project <%= project_id %>.</p>
+                    
+                    <div class="table-wrapper">
+                        <table class="scientific-table">
+                            <caption><strong>Project Specifications</strong></caption>
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%;">Parameter</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Service Type</strong></td>
+                                    <td><%= service_type || 'Transcriptome Sequencing' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Platform</strong></td>
+                                    <td><%= platform %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Read Length</strong></td>
+                                    <td><%= read_length || '2 X 150 PE' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Data Throughput</strong></td>
+                                    <td><%= data_throughput || '~06GB / Sample' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type of Sample</strong></td>
+                                    <td><%= sample_type || 'Leaf' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>No. of Samples</strong></td>
+                                    <td><%= sample_count %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Samples ID of Libraries Prepared</strong></td>
+                                    <td style="word-break: break-word;"><%= samples.join(', ') %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Shipping Condition</strong></td>
+                                    <td><%= shipping_condition || 'NA' %></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>No. of Libraries Prepared</strong></td>
+                                    <td><%= no_of_libraries_prepared || sample_count %></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section 2 -->
+                <section id="section-2">
+                    <h2 class="section-title">Methods</h2>
+
+                    <h3 class="subsection-title"><%= static_snippets.wet_lab?.rna_isolation_qc_header || 'Extraction and Quantitative analysis of RNA:' %></h3>
+                    <p><%= static_snippets.wet_lab?.rna_isolation_qc || 'RNA was extracted from samples using standard methods. RNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed on 1% agarose gel.' %></p>
+
+                    <h3 class="subsection-title"><%= static_snippets.wet_lab?.library_preparation_header || 'Preparation of Library:' %></h3>
+                    <p><%= static_snippets.wet_lab?.library_preparation || 'The paired-end sequencing library was prepared using KAPA mRNA HyperPrep Kit for Illumina. mRNA enrichment was performed, fragmented, and subjected to cDNA synthesis and adapter ligation.' %></p>
+
+                    <h3 class="subsection-title"><%= static_snippets.wet_lab?.library_qc_header || 'Quantity and Quality Check (QC) of Library on Agilent Tape Station 4150:' %></h3>
+                    <p><%= static_snippets.wet_lab?.library_qc || 'The amplified libraries were analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape&reg; as per manufacturer&rsquo;s instructions.' %></p>
+
+                    <% if (static_snippets.wet_lab?.cluster_generation && static_snippets.wet_lab.cluster_generation.trim()) { %>
+                    <h3 class="subsection-title"><%= static_snippets.wet_lab.cluster_generation_header || 'Cluster Generation and Sequencing:' %></h3>
+                    <p><%= static_snippets.wet_lab.cluster_generation %></p>
+                    <% } %>
+                </section>
+
+                <!-- Section 3 -->
+                <section id="section-3">
+                    <h2 class="section-title">Results</h2>
+
+                    <h3 class="subsection-title">RNA QC using Agarose Gel</h3>
+                    <p>RNA quality was validated using 1% Agarose Gel electrophoresis to ensure intact ribosomal RNA bands (28S and 18S).</p>
+                    
+                    <% if (gel_image_src) { %>
+                    <figure>
+                        <div class="figure-container">
+                            <img src="<%= gel_image_src %>" alt="RNA QC Agarose Gel" />
+                        </div>
+                        <figcaption><strong>RNA QC on 1% agarose gel.</strong> Gel electrophoresis assessing RNA integrity.</figcaption>
+                    </figure>
+                    <% } %>
+
+                    <% if (lane_mapping && lane_mapping.headers && lane_mapping.rows && lane_mapping.rows.length > 0) { %>
+                    <div class="table-wrapper">
+                        <table class="scientific-table">
+                            <caption><strong>Lane ID to Sample Name Mapping.</strong></caption>
+                            <thead>
+                                <tr>
+                                    <% lane_mapping.headers.forEach(function(h) { %>
+                                    <th><%= h %></th>
+                                    <% }); %>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% lane_mapping.rows.forEach(function(row) { %>
+                                <tr>
+                                    <% row.forEach(function(cell) { %>
+                                    <td><%= cell %></td>
+                                    <% }); %>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } %>
+
+                    <h3 class="subsection-title">Qubit Quantification Data</h3>
+                    <div class="table-wrapper">
+                        <table class="scientific-table">
+                            <caption><strong>RNA Quantification (Qubit).</strong> Summary of RNA concentrations and yields.</caption>
+                            <thead>
+                                <tr>
+                                    <th>S.N</th>
+                                    <th>Sample ID</th>
+                                    <th>Conc. (ng/µl)</th>
+                                    <th>Volume (µl)</th>
+                                    <th>Yield (µg)</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (qubit_data && qubit_data.length > 0) { %>
+                                    <% qubit_data.forEach(function(q, i) { %>
+                                    <tr>
+                                        <td><%= i + 1 %></td>
+                                        <td><%= q.sample_id %></td>
+                                        <td><%= q.conc %></td>
+                                        <td><%= q.vol %></td>
+                                        <td><%= q.yield %></td>
+                                        <td><%= q.remarks %></td>
+                                     </tr>
+                                     <% }); %>
+                                <% } else { %>
+                                <tr>
+                                    <td colspan="6">No Qubit data available</td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section 4 -->
+                <section id="section-4">
+                    <h2 class="section-title">Quantity and quality check (QC) of library on Agilent Tape Station 4150</h2>
+                    
+                    <h3 class="subsection-title">TapeStation 4150 Profiles of Library:</h3>
+                    <p>Agilent High Sensitivity D1000 ScreenTape® profiles for prepared libraries are shown below:</p>
+
+                    <% if (tapestation_images && tapestation_images.length > 0) { %>
+                    <div class="metrics-grid" style="display: flex; flex-direction: column; gap: 2rem;">
+                        <% tapestation_images.forEach(function(img, index) { %>
+                        <figure style="margin: 0;">
+                            <div class="figure-container">
+                                <img src="<%= img.src %>" alt="TapeStation <%= img.sample_id %>" style="max-height: 400px; width: auto;" />
+                            </div>
+                            <figcaption><strong>Profile <%= index + 1 %>:</strong> <%= img.sample_id %></figcaption>
+                        </figure>
+                        <% }); %>
+                    </div>
+                    <% } else { %>
+                    <p><em>TapeStation profile images not supplied or embedded.</em></p>
+                    <% } %>
+                </section>
+
+                <!-- Section 5 -->
+                <section id="section-5">
+                    <h2 class="section-title"><%= static_snippets.wet_lab?.conclusions_header || 'Conclusions' %></h2>
+                    <ul>
+                        <% if (conclusions && conclusions.length > 0) { %>
+                            <% conclusions.forEach(function(c) { %>
+                            <li><%= c %></li>
+                            <% }); %>
+                        <% } else { %>
+                            <li>The libraries were prepared from the samples by <%= library_kit || 'KAPA mRNA HyperPrep Kit for Illumina (CAT #KK8581)' %>.</li>
+                            <li>The average size of libraries is in range of <%= size_range || '330bp to 360bp' %> for all samples.</li>
+                            <li>The libraries will be sequenced on <%= platform %> platform using <%= chemistry || '2x150 bp PE' %> chemistry.</li>
+                        <% } %>
+                    </ul>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="controls">
+        <button class="btn-floating" onclick="window.print()" title="Export to PDF / Print">
+            <i data-lucide="printer"></i>
+        </button>
+        <button class="btn-floating" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top">
+            <i data-lucide="arrow-up"></i>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // INTERACTIVE TABLE OF CONTENTS (Intersection Observer)
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navItems = document.querySelectorAll('.toc-nav li');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '-20% 0px -60% 0px', // Adjust active trigger area
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        // Remove active class from all
+                        navItems.forEach(item => item.classList.remove('active'));
+                        // Add active class to current
+                        const activeLink = document.querySelector(".toc-nav a[href='#" + id + "']");
+                        if (activeLink) {
+                            activeLink.parentElement.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Smooth scrolling for TOC links
+            document.querySelectorAll('.toc-nav a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

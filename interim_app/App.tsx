@@ -1,4 +1,35 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
+
+// Helper functions for client-side Excel parsing
+function normCol(c: string): string {
+  return c
+    .toLowerCase()
+    .replace(/%/g, 'pct')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function pickColumn(row: Record<string, unknown>, aliases: string[]): unknown {
+  if (!row || aliases.length === 0) return undefined;
+  const normMap: Record<string, string> = {};
+  for (const col of Object.keys(row)) {
+    normMap[normCol(col)] = col;
+  }
+  for (const alias of aliases) {
+    const key = normMap[normCol(alias)];
+    if (key !== undefined && row[key] !== undefined && row[key] !== '') {
+      return row[key];
+    }
+  }
+  for (const alias of aliases) {
+    const nc = normCol(alias);
+    const matchedKey = Object.keys(row).find((c) => normCol(c).includes(nc));
+    if (matchedKey !== undefined && row[matchedKey] !== undefined && row[matchedKey] !== '') {
+      return row[matchedKey];
+    }
+  }
+  return undefined;
+}
 
 // Interfaces
 interface QubitRow {
@@ -230,6 +261,289 @@ export default function App() {
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ text, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const [isWebMode, setIsWebMode] = useState(false);
+
+  useEffect(() => {
+    const checkApi = async () => {
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        setIsWebMode(true);
+        return;
+      }
+      try {
+        const response = await fetch('/api/list-dirs?path=.');
+        const res = await response.json();
+        if (res && res.success) {
+          setIsWebMode(false);
+        } else {
+          setIsWebMode(true);
+        }
+      } catch (e) {
+        setIsWebMode(true);
+      }
+    };
+    checkApi();
+  }, []);
+
+  const resolveImageSrc = (src: string) => {
+    if (!src) return '';
+    if (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('http')) {
+      return src;
+    }
+    return `/api/file?path=${encodeURIComponent(src)}`;
+  };
+
+  const parseQubitExcelClient = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rawRows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
+        
+        const parsed = rawRows.map((row) => {
+          const sample = pickColumn(row, ['Sample', 'Sample ID', 'Sample Name', 'sample', 'SampleID']) ?? '';
+          const conc = pickColumn(row, ['Concentration', 'Qubit', 'ng/ul', 'ng/uL', 'Value', 'conc']) ?? 'N/A';
+          const vol = pickColumn(row, ['Volume', 'vol', 'Vol']) ?? 'N/A';
+          const yieldVal = pickColumn(row, ['Yield', 'yield']) ?? 'N/A';
+          const remarks = pickColumn(row, ['Remarks', 'remarks', 'Note']) ?? '';
+
+          return {
+            sample_id: String(sample),
+            conc: String(conc),
+            vol: String(vol),
+            yield: String(yieldVal),
+            remarks: String(remarks),
+            qc_status: parseFloat(String(conc)) > 20 ? 'PASS' : parseFloat(String(conc)) > 5 ? 'WARN' : 'FAIL' as const
+          };
+        }).filter(r => r.sample_id);
+        
+        if (parsed.length > 0) {
+          setQubitData(parsed);
+          setLibrarySizes(parsed.map(() => 350));
+          showToast(`Parsed ${parsed.length} samples from Qubit Excel!`, 'success');
+        } else {
+          showToast('No samples found in Excel file', 'error');
+        }
+      } catch (err: any) {
+        showToast('Error parsing Excel: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const parseLaneMapExcelClient = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rawRows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
+        
+        const parsedLanes: LaneRow[] = [];
+        for (const row of rawRows) {
+          const keys = Object.keys(row);
+          const laneKeys = keys.filter(k => k.toLowerCase().includes('lane')).sort();
+          const sampleKeys = keys.filter(k => k.toLowerCase().includes('sample') || k.toLowerCase().includes('name')).sort();
+          
+          const pairsCount = Math.min(laneKeys.length, sampleKeys.length);
+          for (let i = 0; i < pairsCount; i++) {
+            const laneVal = row[laneKeys[i]];
+            const sampleVal = row[sampleKeys[i]];
+            if (laneVal !== undefined && laneVal !== null && laneVal !== '') {
+              parsedLanes.push({
+                lane: String(laneVal).trim(),
+                sample: sampleVal ? String(sampleVal).trim() : ''
+              });
+            }
+          }
+        }
+        
+        parsedLanes.sort((a, b) => {
+          const na = parseInt(a.lane, 10);
+          const nb = parseInt(b.lane, 10);
+          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+          return a.lane.localeCompare(b.lane);
+        });
+        
+        if (parsedLanes.length > 0) {
+          setLanes(parsedLanes);
+          showToast(`Parsed ${parsedLanes.length} lanes from mapping Excel!`, 'success');
+        } else {
+          showToast('No lanes found in mapping file', 'error');
+        }
+      } catch (err: any) {
+        showToast('Error parsing Lane Map: ' + err.message, 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleGelImageUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setSelectedGelImage(dataUrl);
+      setDetectedImages(prev => ({
+        ...prev,
+        gel: [...prev.gel.filter(x => !x.startsWith('data:')), dataUrl]
+      }));
+      showToast('Gel Image uploaded successfully!', 'success');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleTapeStationImagesUpload = (files: FileList) => {
+    const fileArray = Array.from(files);
+    let loadedCount = 0;
+    const newImages: TapeStationImage[] = [];
+    const imagePaths: string[] = [];
+
+    fileArray.forEach((file, idx) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        imagePaths.push(dataUrl);
+        
+        const sampleId = qubitData[idx]?.sample_id || `Sample_${idx + 1}`;
+        newImages.push({
+          sample_id: sampleId,
+          src: dataUrl
+        });
+        
+        loadedCount++;
+        if (loadedCount === fileArray.length) {
+          setTapestationImages(prev => {
+            const existing = [...prev];
+            newImages.forEach(newImg => {
+              const index = existing.findIndex(e => e.sample_id === newImg.sample_id);
+              if (index > -1) {
+                existing[index] = newImg;
+              } else {
+                existing.push(newImg);
+              }
+            });
+            return existing;
+          });
+          
+          setDetectedImages(prev => ({
+            ...prev,
+            tapestation: [...prev.tapestation.filter(x => !x.startsWith('data:')), ...imagePaths]
+          }));
+          showToast(`Uploaded ${loadedCount} TapeStation images!`, 'success');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleLogoUpload = (file: File, type: 'logo' | 'unipath') => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (type === 'logo') {
+        setLogoPath(dataUrl);
+      } else {
+        setUnipathLogoPath(dataUrl);
+      }
+      showToast('Logo uploaded successfully!', 'success');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const initializeWebEmptyProject = () => {
+    setProjectId('NGS-WEB-PROJECT');
+    setClientName('Web User');
+    setSubmittedTo('Dr. Amit Gupta');
+    setInstitution('Unigenome Web Lab');
+    setReportDate(new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
+    
+    setQubitData([
+      { sample_id: 'S1', conc: '25.4', vol: '15', yield: '0.38', remarks: 'Good Quality', qc_status: 'PASS' },
+      { sample_id: 'S2', conc: '18.1', vol: '15', yield: '0.27', remarks: 'Low Conc', qc_status: 'WARN' },
+      { sample_id: 'S3', conc: '32.0', vol: '15', yield: '0.48', remarks: 'Good Quality', qc_status: 'PASS' }
+    ]);
+    
+    setLanes([
+      { lane: '1', sample: 'S1' },
+      { lane: '2', sample: 'S2' },
+      { lane: '3', sample: 'S3' }
+    ]);
+
+    setScanResult({
+      success: true,
+      imageFiles: []
+    });
+    
+    showToast('Workspace initialized!', 'success');
+  };
+
+  const loadWebDemoData = () => {
+    setProjectId('NGS-COMP-2026');
+    setClientName('Dr. Sarah Jenkins');
+    setSubmittedTo('Dr. Amit Gupta');
+    setInstitution('Institute of Genomics & Biotech');
+    setReportDate(new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
+    setServiceType('Transcriptome Sequencing');
+    setPlatform('Illumina Novaseq X Plus');
+    setReadLength('2 X 150 PE');
+    setDataOutput('~06GB / Sample');
+    setSampleType('Leaf / Arabidopsis');
+    setShippingCondition('Dry Ice');
+
+    setQubitData([
+      { sample_id: 'WT_Rep1', conc: '45.2', vol: '20', yield: '0.90', remarks: 'High Quality', qc_status: 'PASS' },
+      { sample_id: 'WT_Rep2', conc: '38.8', vol: '20', yield: '0.78', remarks: 'High Quality', qc_status: 'PASS' },
+      { sample_id: 'KO_Rep1', conc: '22.4', vol: '20', yield: '0.45', remarks: 'Acceptable', qc_status: 'PASS' },
+      { sample_id: 'KO_Rep2', conc: '14.5', vol: '20', yield: '0.29', remarks: 'Low Concentration', qc_status: 'WARN' },
+      { sample_id: 'KO_Rep3', conc: '4.8', vol: '20', yield: '0.10', remarks: 'Failed QC', qc_status: 'FAIL' }
+    ]);
+
+    setLanes([
+      { lane: '1', sample: 'WT_Rep1' },
+      { lane: '2', sample: 'WT_Rep2' },
+      { lane: '3', sample: 'KO_Rep1' },
+      { lane: '4', sample: 'KO_Rep2' },
+      { lane: '5', sample: 'KO_Rep3' }
+    ]);
+
+    const mockGelSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="100%" height="100%" fill="%23111"/><text x="20" y="30" fill="%23fff" font-family="monospace" font-size="12">M  1  2  3  4  5</text><line x1="20" y1="50" x2="380" y2="50" stroke="%23333" stroke-width="2"/><line x1="25" y1="60" x2="35" y2="60" stroke="%2388f" stroke-width="4" opacity="0.8"/><line x1="55" y1="80" x2="65" y2="80" stroke="%238f8" stroke-width="6"/><line x1="85" y1="83" x2="95" y2="83" stroke="%238f8" stroke-width="6"/><line x1="115" y1="90" x2="125" y2="90" stroke="%238f8" stroke-width="4"/><line x1="145" y1="100" x2="155" y2="100" stroke="%238f8" stroke-width="4"/><line x1="175" y1="130" x2="185" y2="130" stroke="%23f88" stroke-width="2"/></svg>';
+    const mockTS1 = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150" viewBox="0 0 300 150"><rect width="100%" height="100%" fill="%23fff" stroke="%23ccc"/><path d="M10 130 Q 80 130 150 50 T 290 130" fill="none" stroke="%231e3a8a" stroke-width="3"/><text x="110" y="30" fill="%231e3a8a" font-family="sans-serif" font-size="12" font-weight="bold">Peak: 450 bp</text></svg>';
+    
+    setSelectedGelImage(mockGelSvg);
+    setTapestationImages([
+      { sample_id: 'WT_Rep1', src: mockTS1 },
+      { sample_id: 'WT_Rep2', src: mockTS1 },
+      { sample_id: 'KO_Rep1', src: mockTS1 }
+    ]);
+
+    setDetectedImages({
+      rnaQc: [],
+      tapestation: [mockTS1],
+      bioanalyzer: [],
+      gel: [mockGelSvg],
+      qubit: []
+    });
+
+    setScanResult({
+      success: true,
+      imageFiles: [mockGelSvg, mockTS1]
+    });
+
+    showToast('Loaded demo project data successfully!', 'success');
+  };
+
+  const handleBrowserPrint = () => {
+    const iframe = document.querySelector('iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } else {
+      showToast('Could not find report preview iframe to print', 'error');
+    }
   };
 
   useEffect(() => {
@@ -770,8 +1084,8 @@ export default function App() {
       if (page.type === 'cover') {
         html += `
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 40px; padding-bottom: 20px;">
-            <img src="${logoPath ? '/api/file?path=' + encodeURIComponent(logoPath) : ''}" style="max-height: 45px; max-width: 180px; object-fit: contain;" />
-            <img src="${unipathLogoPath ? '/api/file?path=' + encodeURIComponent(unipathLogoPath) : ''}" style="max-height: 45px; max-width: 180px; object-fit: contain;" />
+            <img src="${logoPath ? resolveImageSrc(logoPath) : ''}" style="max-height: 45px; max-width: 180px; object-fit: contain;" />
+            <img src="${unipathLogoPath ? resolveImageSrc(unipathLogoPath) : ''}" style="max-height: 45px; max-width: 180px; object-fit: contain;" />
           </div>
           <div style="text-align: center; padding-top: 40px;">
             <div style="font-size: 14px; text-transform: uppercase; font-weight: bold; color: #64748b; tracking: 0.1em;">Interim Quality Control & Sequencing Report</div>
@@ -850,7 +1164,7 @@ export default function App() {
           <p style="font-size: 12px;">Total RNA integrity was resolved on a 1% agarose gel for assessment of 28S/18S ribosomal RNA bands.</p>
           <div style="border: 1px dashed #cbd5e1; height: 320px; display: flex; align-items: center; justify-content: center; background: #f8fafc; margin: 20px 0; border-radius: 8px;">
             ${selectedGelImage ? 
-              `<img src="/api/file?path=${encodeURIComponent(selectedGelImage)}" style="max-height: 100%; max-width: 100%; object-fit: contain;"/>` : 
+              `<img src="${resolveImageSrc(selectedGelImage)}" style="max-height: 100%; max-width: 100%; object-fit: contain;"/>` : 
               `<span style="color: #94a3b8; font-size: 12px;">[ Agarose Gel QC Image Not Loaded ]</span>`
             }
           </div>
@@ -865,7 +1179,7 @@ export default function App() {
               <div style="border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px; text-align: center; background: #fafafa;">
                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 6px; color: #1e3a8a;">${img.sample_id}</div>
                 <div style="height: 120px; display: flex; align-items: center; justify-content: center; background: #fff;">
-                  <img src="/api/file?path=${encodeURIComponent(img.src)}" style="max-height: 100%; max-width: 100%; object-fit: contain;"/>
+                  <img src="${resolveImageSrc(img.src)}" style="max-height: 100%; max-width: 100%; object-fit: contain;"/>
                 </div>
               </div>
             `).join('')}
@@ -922,73 +1236,130 @@ export default function App() {
         {toast && (
           <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
             <div className={`px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold flex items-center gap-2 ${
-              toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'
+              toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+              toast.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+              'bg-sky-50 border-sky-200 text-sky-800'
             }`}>
               <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
               <span>{toast.text}</span>
             </div>
           </div>
         )}
-
+ 
         <div className="max-w-xl w-full bg-white border border-slate-200 rounded-2xl shadow-xl p-8 space-y-6 transform hover:scale-[1.01] transition-transform duration-300">
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-xl bg-sky-600 flex items-center justify-center text-white font-extrabold text-xl mx-auto shadow-sm">
               N
             </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">NGS Interim Report Automator</h1>
-            <p className="text-xs text-slate-400">Select a project deliverables folder containing raw QC and quantification files.</p>
+            {isWebMode ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Web Mode Active
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">Select a project deliverables folder containing raw QC and quantification files.</p>
+            )}
           </div>
-
-          {/* Large Drop Zone */}
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center transition cursor-pointer ${
-              dragOver ? 'border-sky-500 bg-sky-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/50'
-            }`}
-          >
-            <svg className="w-10 h-10 text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-            <span className="text-xs font-bold text-slate-700">Drop QC Image Folder Here</span>
-            <span className="text-[10px] text-slate-400 mt-1">Recursively scans subfolders</span>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Or Paste Path Manually</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g. C:\Users\Lab\Deliverables_260046"
-                  value={projectPath}
-                  onChange={(e) => setProjectPath(e.target.value)}
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-sky-500"
-                />
-                <button
-                  onClick={handleBrowse}
-                  className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0"
-                >
-                  Browse Folder
-                </button>
+ 
+          {isWebMode ? (
+            <div className="space-y-4 pt-2">
+              <div className="border border-slate-100 bg-slate-50/50 rounded-xl p-4 text-center space-y-3">
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  You are running in <strong>Web Mode</strong> (standalone deployment). You can initialize an empty report workspace or load pre-built demo data instantly to test the application.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={initializeWebEmptyProject}
+                    className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    Start Empty Project
+                  </button>
+                  <button
+                    onClick={loadWebDemoData}
+                    className="bg-sky-50 hover:bg-sky-100 border border-sky-100 text-sky-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                  >
+                    Load Demo Data
+                  </button>
+                </div>
+              </div>
+ 
+              <div className="border-t border-slate-100 pt-4">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Or Upload Qubit Excel Sheet</label>
+                <label className="border border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition">
+                  <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v16m8-8H4"></path></svg>
+                  <span className="text-xs font-semibold text-slate-600">Select Qubit Excel file</span>
+                  <span className="text-[10px] text-slate-400 mt-1">Direct client-side spreadsheet parse</span>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setProjectId(file.name.replace(/\.[^/.]+$/, ''));
+                        initializeWebEmptyProject();
+                        parseQubitExcelClient(file);
+                      }
+                    }}
+                  />
+                </label>
               </div>
             </div>
-
-            <button
-              onClick={handleScan}
-              disabled={loading}
-              className="w-full bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow-sm flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Scanning & Auto-Mapping...
-                </>
-              ) : 'Initialize Workspace'}
-            </button>
-          </div>
+          ) : (
+            <>
+              {/* Large Drop Zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center transition cursor-pointer ${
+                  dragOver ? 'border-sky-500 bg-sky-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/50'
+                }`}
+              >
+                <svg className="w-10 h-10 text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                <span className="text-xs font-bold text-slate-700">Drop QC Image Folder Here</span>
+                <span className="text-[10px] text-slate-400 mt-1">Recursively scans subfolders</span>
+              </div>
+ 
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Or Paste Path Manually</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. C:\Users\Lab\Deliverables_260046"
+                      value={projectPath}
+                      onChange={(e) => setProjectPath(e.target.value)}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-sky-500"
+                    />
+                    <button
+                      onClick={handleBrowse}
+                      className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0"
+                    >
+                      Browse Folder
+                    </button>
+                  </div>
+                </div>
+ 
+                <button
+                  onClick={handleScan}
+                  disabled={loading}
+                  className="w-full bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Scanning & Auto-Mapping...
+                    </>
+                  ) : 'Initialize Workspace'}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
@@ -1022,7 +1393,7 @@ export default function App() {
           <div className="p-6 border-b border-slate-100 flex items-center justify-between relative">
             <div className="flex items-center justify-center w-full">
               <img
-                src={logoPath ? `/api/file?path=${encodeURIComponent(logoPath)}` : ''}
+                src={logoPath ? resolveImageSrc(logoPath) : ''}
                 alt="Unigenome Logo"
                 className="max-h-10 w-auto object-contain"
               />
@@ -1111,16 +1482,31 @@ export default function App() {
                 </svg>
               </button>
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest truncate max-w-[200px] sm:max-w-xs md:max-w-none">
-                Active Project: <span className="font-mono text-slate-800">{projectPath || 'None'}</span>
+                Active Project: <span className="font-mono text-slate-800">{projectId || (isWebMode ? 'Web Workspace' : 'None')}</span>
               </span>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={handleScan}
-                className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
-              >
-                Refresh Scan
-              </button>
+              {isWebMode ? (
+                <label className="bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-1.5 cursor-pointer shadow-sm">
+                  📂 Import Qubit Excel
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) parseQubitExcelClient(file);
+                    }}
+                  />
+                </label>
+              ) : (
+                <button
+                  onClick={handleScan}
+                  className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
+                >
+                  Refresh Scan
+                </button>
+              )}
             </div>
           </header>
 
@@ -1276,6 +1662,40 @@ export default function App() {
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none"
                       />
                     </div>
+                    {isWebMode && (
+                      <>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Company/Primary Logo</label>
+                          <label className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-center cursor-pointer block">
+                            Upload Logo Image
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleLogoUpload(file, 'logo');
+                              }}
+                            />
+                          </label>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Client/Secondary Logo</label>
+                          <label className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-center cursor-pointer block">
+                            Upload Logo Image
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleLogoUpload(file, 'unipath');
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1706,9 +2126,9 @@ export default function App() {
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                     {scanResult?.imageFiles?.map((f: string, idx: number) => (
                       <div key={idx} className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50 p-1 flex flex-col items-center">
-                        <img src={`/api/file?path=${encodeURIComponent(f)}`} alt="scanned-qc" className="h-16 w-full object-contain bg-white rounded" />
+                        <img src={resolveImageSrc(f)} alt="scanned-qc" className="h-16 w-full object-contain bg-white rounded" />
                         <span className="text-[8px] text-slate-400 font-mono truncate w-full text-center mt-1">
-                          {f.split(/[\\/]/).pop()}
+                          {f.split(/[\\/]/).pop()?.startsWith('data:') ? `Upload_${idx + 1}` : f.split(/[\\/]/).pop()}
                         </span>
                       </div>
                     ))}
@@ -1717,35 +2137,79 @@ export default function App() {
                     )}
                   </div>
                 </div>
-
+ 
                 {/* Agarose Gel Image Select */}
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Agarose Gel Mapping</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-500 mb-1">Assigned Gel Image</label>
-                      <select
-                        value={selectedGelImage}
-                        onChange={(e) => setSelectedGelImage(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:border-sky-500 focus:outline-none"
-                      >
-                        <option value="">-- Choose Gel Image --</option>
-                        {(scanResult?.imageFiles || []).map((f: string) => (
-                          <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
-                        ))}
-                      </select>
+                      {isWebMode ? (
+                        <div className="flex flex-col gap-2">
+                          <label className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all text-center cursor-pointer block">
+                            Upload Gel Image
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleGelImageUpload(file);
+                              }}
+                            />
+                          </label>
+                          {selectedGelImage && (
+                            <span className="text-[10px] text-slate-500 font-mono truncate">
+                              Image loaded client-side
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedGelImage}
+                          onChange={(e) => setSelectedGelImage(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:border-sky-500 focus:outline-none"
+                        >
+                          <option value="">-- Choose Gel Image --</option>
+                          {(scanResult?.imageFiles || []).map((f: string) => (
+                            <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                     {selectedGelImage && (
                       <div className="border border-slate-200 rounded-lg p-2 bg-slate-50 flex items-center justify-center h-48 animate-in zoom-in-95 duration-200">
-                        <img src={`/api/file?path=${encodeURIComponent(selectedGelImage)}`} alt="Gel" className="max-h-full max-w-full object-contain" />
+                        <img src={resolveImageSrc(selectedGelImage)} alt="Gel" className="max-h-full max-w-full object-contain" />
                       </div>
                     )}
                   </div>
                 </div>
-
+ 
                 {/* TapeStation sample assignment */}
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">TapeStation Sample Assignments</h2>
+                  
+                  {isWebMode && (
+                    <div className="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-between items-center shrink-0">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-700">Bulk Upload TapeStation Profiles</h4>
+                        <p className="text-[10px] text-slate-400">Select multiple profile images. They will be mapped to samples sequentially.</p>
+                      </div>
+                      <label className="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">
+                        Upload Profiles
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files) handleTapeStationImagesUpload(e.target.files);
+                          }}
+                        />
+                      </label>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {qubitData.map((row, idx) => {
                       const assigned = tapestationImages.find(img => img.sample_id === row.sample_id)?.src || '';
@@ -1753,25 +2217,51 @@ export default function App() {
                         <div key={idx} className="border border-slate-100 rounded-lg p-3 bg-slate-50 flex items-center justify-between gap-4">
                           <span className="font-mono text-xs font-bold text-slate-700">{row.sample_id}</span>
                           <div className="flex-1">
-                            <select
-                              value={assigned}
-                              onChange={(e) => {
-                                const filter = tapestationImages.filter(i => i.sample_id !== row.sample_id);
-                                if (e.target.value) {
-                                  filter.push({ sample_id: row.sample_id, src: e.target.value });
-                                }
-                                setTapestationImages(filter);
-                              }}
-                              className="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs focus:border-sky-500 focus:outline-none"
-                            >
-                              <option value="">-- No Tape Image --</option>
-                              {(scanResult?.imageFiles || []).map((f: string) => (
-                                <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
-                              ))}
-                            </select>
+                            {isWebMode ? (
+                              <label className="bg-white hover:bg-slate-100 border border-slate-200 rounded px-2.5 py-1.5 text-xs font-semibold cursor-pointer text-center flex items-center justify-center">
+                                Upload image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const dataUrl = ev.target?.result as string;
+                                        setTapestationImages(prev => {
+                                          const filter = prev.filter(i => i.sample_id !== row.sample_id);
+                                          filter.push({ sample_id: row.sample_id, src: dataUrl });
+                                          return filter;
+                                        });
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                            ) : (
+                              <select
+                                value={assigned}
+                                onChange={(e) => {
+                                  const filter = tapestationImages.filter(i => i.sample_id !== row.sample_id);
+                                  if (e.target.value) {
+                                    filter.push({ sample_id: row.sample_id, src: e.target.value });
+                                  }
+                                  setTapestationImages(filter);
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs focus:border-sky-500 focus:outline-none"
+                              >
+                                <option value="">-- No Tape Image --</option>
+                                {(scanResult?.imageFiles || []).map((f: string) => (
+                                  <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                           {assigned && (
-                            <img src={`/api/file?path=${encodeURIComponent(assigned)}`} alt="Tapestation Profile" className="w-12 h-10 object-cover rounded bg-white animate-in fade-in duration-200" />
+                            <img src={resolveImageSrc(assigned)} alt="Tapestation Profile" className="w-12 h-10 object-cover rounded bg-white animate-in fade-in duration-200" />
                           )}
                         </div>
                       );
@@ -1853,92 +2343,108 @@ export default function App() {
 
                   <div className="space-y-3 pt-4 border-t border-slate-100">
                     
-                    {/* BUTTON 1: Interim PDF */}
-                    <button
-                      onClick={() => triggerGenerate('interim', 'pdf')}
-                      disabled={generatingButton !== null}
-                      className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
-                        generatingButton === 'interim' 
-                          ? 'bg-sky-500 text-white cursor-wait' 
-                          : 'bg-sky-600 hover:bg-sky-700 text-white'
-                      }`}
-                    >
-                      {generatingButton === 'interim' ? (
-                        <>
-                          {generationSuccess ? (
-                            <span className="flex items-center gap-1.5 animate-bounce">
-                              ✓ Generated Successfully!
-                            </span>
-                          ) : (
+                    {isWebMode ? (
+                      <div className="space-y-3">
+                        <button
+                          onClick={handleBrowserPrint}
+                          className="w-full font-bold py-3 rounded-lg text-xs shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97]"
+                        >
+                          🖨️ Print / Save Report as PDF
+                        </button>
+                        <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
+                          Note: Since you are running in Web Mode, report compiling is done directly in your browser. Selecting the print option opens your browser's print utility, allowing you to select "Save as PDF" to download it.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* BUTTON 1: Interim PDF */}
+                        <button
+                          onClick={() => triggerGenerate('interim', 'pdf')}
+                          disabled={generatingButton !== null}
+                          className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
+                            generatingButton === 'interim' 
+                              ? 'bg-sky-500 text-white cursor-wait' 
+                              : 'bg-sky-600 hover:bg-sky-700 text-white'
+                          }`}
+                        >
+                          {generatingButton === 'interim' ? (
                             <>
-                              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Compiling Interim Report...
+                              {generationSuccess ? (
+                                <span className="flex items-center gap-1.5 animate-bounce">
+                                  ✓ Generated Successfully!
+                                </span>
+                              ) : (
+                                <>
+                                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Compiling Interim Report...
+                                </>
+                              )}
                             </>
-                          )}
-                        </>
-                      ) : 'Generate Interim PDF & HTML'}
-                    </button>
+                          ) : 'Generate Interim PDF & HTML'}
+                        </button>
 
-                    {/* BUTTON 2: Combined Report */}
-                    <button
-                      onClick={() => triggerGenerate('comprehensive', 'pdf')}
-                      disabled={generatingButton !== null}
-                      className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
-                        generatingButton === 'comprehensive'
-                          ? 'bg-slate-700 text-white cursor-wait'
-                          : 'bg-slate-900 hover:bg-black text-white'
-                      }`}
-                    >
-                      {generatingButton === 'comprehensive' ? (
-                        <>
-                          {generationSuccess ? (
-                            <span className="flex items-center gap-1.5 animate-bounce">
-                              ✓ Generated Successfully!
-                            </span>
-                          ) : (
+                        {/* BUTTON 2: Combined Report */}
+                        <button
+                          onClick={() => triggerGenerate('comprehensive', 'pdf')}
+                          disabled={generatingButton !== null}
+                          className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
+                            generatingButton === 'comprehensive'
+                              ? 'bg-slate-700 text-white cursor-wait'
+                              : 'bg-slate-900 hover:bg-black text-white'
+                          }`}
+                        >
+                          {generatingButton === 'comprehensive' ? (
                             <>
-                              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Compiling Combined Report...
+                              {generationSuccess ? (
+                                <span className="flex items-center gap-1.5 animate-bounce">
+                                  ✓ Generated Successfully!
+                                </span>
+                              ) : (
+                                <>
+                                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Compiling Combined Report...
+                                </>
+                              )}
                             </>
-                          )}
-                        </>
-                      ) : 'Generate Combined/Comprehensive Report'}
-                    </button>
+                          ) : 'Generate Combined/Comprehensive Report'}
+                        </button>
 
-                    {/* BUTTON 3: DOCX */}
-                    <button
-                      onClick={() => triggerGenerate('docx', 'docx')}
-                      disabled={generatingButton !== null}
-                      className={`w-full font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
-                        generatingButton === 'docx'
-                          ? 'bg-slate-100 text-slate-400 cursor-wait border border-slate-200'
-                          : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      {generatingButton === 'docx' ? (
-                        <>
-                          {generationSuccess ? (
-                            <span className="flex items-center gap-1.5 animate-bounce text-emerald-600">
-                              ✓ Document Saved!
-                            </span>
-                          ) : (
+                        {/* BUTTON 3: DOCX */}
+                        <button
+                          onClick={() => triggerGenerate('docx', 'docx')}
+                          disabled={generatingButton !== null}
+                          className={`w-full font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
+                            generatingButton === 'docx'
+                              ? 'bg-slate-100 text-slate-400 cursor-wait border border-slate-200'
+                              : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          {generatingButton === 'docx' ? (
                             <>
-                              <svg className="animate-spin h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Saving Word DOCX...
+                              {generationSuccess ? (
+                                <span className="flex items-center gap-1.5 animate-bounce text-emerald-600">
+                                  ✓ Document Saved!
+                                </span>
+                              ) : (
+                                <>
+                                  <svg className="animate-spin h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Saving Word DOCX...
+                                </>
+                              )}
                             </>
-                          )}
-                        </>
-                      ) : 'Generate DOCX Format'}
-                    </button>
+                          ) : 'Generate DOCX Format'}
+                        </button>
+                      </>
+                    )}
 
                   </div>
                 </div>

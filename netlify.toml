@@ -1,0 +1,6 @@
+[build]
+  command = "npm run build:interim"
+  publish = "interim_app/dist"
+
+[build.environment]
+  NODE_VERSION = "20"

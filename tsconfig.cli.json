@@ -44,6 +44,7 @@
     "src/validate.ts",
     "src/statsDiscovery.ts",
     "src/fastaStats.ts",
+    "src/api.ts",
     "src/*.test.ts"
   ],
   "exclude": ["node_modules", "dist", "src/main.tsx", "src/*.css", "src/test", "src/vite-env.d.ts"]

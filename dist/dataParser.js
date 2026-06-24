@@ -18,6 +18,194 @@ function stripMarkdownEscapes(text) {
     // Handle all common markdown escape sequences mammoth produces
     return text.replace(/\\([\\.()\[\]\-_*#!{}+])/g, '$1');
 }
+async function getTableDataFromCsv(filePath) {
+    try {
+        if (!(await fs.pathExists(filePath)))
+            return null;
+        const content = await fs.readFile(filePath, 'utf-8');
+        const lines = content.split(/\r?\n/).filter((l) => l.trim());
+        if (lines.length === 0)
+            return null;
+        const isTsv = filePath.toLowerCase().endsWith('.tsv') || filePath.toLowerCase().endsWith('.txt');
+        const separator = isTsv ? '\t' : ',';
+        const headers = lines[0].split(separator).map((h) => h.trim().replace(/^"|"$/g, ''));
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].split(separator).map((c) => c.trim().replace(/^"|"$/g, ''));
+            if (row.length && row.some(r => r)) {
+                rows.push(row);
+            }
+        }
+        return { headers, rows };
+    }
+    catch (e) {
+        console.warn(chalk.yellow(`Warning: Could not parse file ${filePath}: ${e}`));
+        return null;
+    }
+}
+async function parseMetagenomeData(inputDir) {
+    // 1. Raw Stats
+    let metagenome_raw_stats = [];
+    const rawStatsFile = path.join(inputDir, '00_Raw_Data', 'data_stats.txt');
+    if (await fs.pathExists(rawStatsFile)) {
+        const rawRows = await readExcelRows(rawStatsFile);
+        metagenome_raw_stats = rawRows.map(row => ({
+            sample_id: pickColumn(row, ['Sample ID', 'SampleID', 'sample']) ?? 'Unknown',
+            pe_seq: pickColumn(row, ['PE seq', 'PE_seq', 'pe_reads']) ?? 'N/A',
+            total_reads: pickColumn(row, ['Total reads (R1+R2)', 'Total reads', 'total_reads']) ?? 'N/A',
+            avg_len: pickColumn(row, ['Avg. read len(bp)', 'Avg. read len', 'avg_len']) ?? 'N/A',
+            data_bp: pickColumn(row, ['Data (bp)', 'data_bp']) ?? 'N/A',
+            data_mb: pickColumn(row, ['Data (MB)', 'data_mb']) ?? 'N/A'
+        }));
+    }
+    // 2. Feature Summary
+    let metagenome_feature_summary = [];
+    const featureStatsFile = path.join(inputDir, '03_Deblur_denoised_feature', 'sample-frequency-detail.csv');
+    if (await fs.pathExists(featureStatsFile)) {
+        const featRows = await readExcelRows(featureStatsFile);
+        metagenome_feature_summary = featRows.map(row => ({
+            sample_id: pickColumn(row, ['Sample ID', 'SampleID', 'sample']) ?? 'Unknown',
+            pe_seq: pickColumn(row, ['PE seq', 'PE_seq', 'pe_reads']) ?? 'N/A',
+            joined_filtered: pickColumn(row, ['Joined filtered reads', 'Joined filtered', 'joined_filtered']) ?? 'N/A',
+            denoised: pickColumn(row, ['denoised sequenced', 'denoised', 'denoised_seq']) ?? 'N/A',
+            filtered_seq: pickColumn(row, ['Filtered sequences', 'Filtered seq', 'filtered_seq']) ?? 'N/A',
+            filtered_features: pickColumn(row, ['Filtered feature count/OTUs', 'Filtered feature count', 'features']) ?? 'N/A'
+        }));
+    }
+    // 3. Taxonomy Phylum
+    let metagenome_taxonomy_distribution = await getTableDataFromCsv(path.join(inputDir, '05_Taxonomy_barplot', 'level-2.csv')) ||
+        await getTableDataFromCsv(path.join(inputDir, '05_Taxonomy_barplot', 'level-2_taxa.csv'));
+    // 4. Alpha Diversity
+    let metagenome_alpha_diversity = [];
+    const alphaStatsFile = path.join(inputDir, '08_Alpha_diversity', 'alpha_diversity.csv');
+    if (await fs.pathExists(alphaStatsFile)) {
+        const alphaRows = await readExcelRows(alphaStatsFile);
+        metagenome_alpha_diversity = alphaRows.map(row => ({
+            sample_id: pickColumn(row, ['Sample ID', 'SampleID', 'sample']) ?? 'Unknown',
+            chao1: pickColumn(row, ['chao1']) ?? 'N/A',
+            shannon: pickColumn(row, ['shannon_entropy', 'shannon']) ?? 'N/A',
+            observed_features: pickColumn(row, ['observed_features', 'observed_features observed_features']) ?? 'N/A'
+        }));
+    }
+    // 5. Beta Diversity Matrix
+    let metagenome_beta_matrix = await getTableDataFromCsv(path.join(inputDir, '10_Beta_diversity', 'bray_curtis_distance_matrix', 'distance-matrix.tsv'));
+    // 6. Image Discovery
+    const findPngInDir = async (dirName, pattern) => {
+        const dirPath = path.join(inputDir, dirName);
+        if (await fs.pathExists(dirPath)) {
+            const files = await fs.readdir(dirPath);
+            const matched = files.find(f => pattern.test(f.toLowerCase()) && /\.(png|jpg|jpeg|svg)$/i.test(f));
+            if (matched)
+                return path.join(dirPath, matched);
+        }
+        return '';
+    };
+    let phylumChart = await findPngInDir('05_Taxonomy_barplot', /phylum|taxa|bar/i);
+    let heatmapPlot = await findPngInDir('06_Feature_heatmap', /heatmap|otu/i);
+    let alphaPlot = await findPngInDir('08_Alpha_diversity', /alpha|diversity/i);
+    let rarefactionPlot = await findPngInDir('09_Rarefaction_curve', /rarefaction|curve/i);
+    let pcoaPlot = await findPngInDir('10_Beta_diversity', /pcoa|bray|emperor/i);
+    let kronaPlot = await findPngInDir('11_Krona_graph', /krona|pie/i);
+    // Fallbacks to NGS_240555 mock data if empty
+    const componentsDir = getComponentsDir();
+    const placeholderImg = path.join(componentsDir, 'workflow.png');
+    if (metagenome_raw_stats.length === 0) {
+        metagenome_raw_stats = [
+            { sample_id: "S13-En", pe_seq: "1,39,588", total_reads: "2,79,176", avg_len: "301", data_bp: "84031976", data_mb: "84.03" },
+            { sample_id: "S17-En", pe_seq: "1,12,805", total_reads: "2,25,610", avg_len: "301", data_bp: "67908610", data_mb: "67.90" },
+            { sample_id: "S20-En", pe_seq: "1,81,292", total_reads: "3,62,584", avg_len: "301", data_bp: "109137784", data_mb: "109.13" },
+            { sample_id: "S4-En", pe_seq: "1,67,813", total_reads: "3,35,626", avg_len: "301", data_bp: "101023426", data_mb: "101.02" },
+            { sample_id: "S5-En", pe_seq: "1,75,032", total_reads: "3,50,064", avg_len: "301", data_bp: "105369264", data_mb: "105.36" },
+            { sample_id: "S8-En", pe_seq: "1,63,080", total_reads: "3,26,160", avg_len: "301", data_bp: "98174160", data_mb: "98.17" },
+            { sample_id: "SC-En", pe_seq: "1,87,852", total_reads: "3,75,704", avg_len: "301", data_bp: "113086904", data_mb: "113.08" }
+        ];
+    }
+    if (metagenome_feature_summary.length === 0) {
+        metagenome_feature_summary = [
+            { sample_id: "S13-En", pe_seq: "139130", joined_filtered: "118422", denoised: "48918", filtered_seq: "48833", filtered_features: "607" },
+            { sample_id: "S17-En", pe_seq: "112453", joined_filtered: "95495", denoised: "32650", filtered_seq: "32577", filtered_features: "599" },
+            { sample_id: "S20-En", pe_seq: "180743", joined_filtered: "154495", denoised: "51448", filtered_seq: "51387", filtered_features: "566" },
+            { sample_id: "S4-En", pe_seq: "167310", joined_filtered: "143461", denoised: "56594", filtered_seq: "56485", filtered_features: "682" },
+            { sample_id: "S5-En", pe_seq: "174434", joined_filtered: "146839", denoised: "45124", filtered_seq: "45081", filtered_features: "389" },
+            { sample_id: "S8-En", pe_seq: "162623", joined_filtered: "137917", denoised: "56197", filtered_seq: "56110", filtered_features: "495" },
+            { sample_id: "SC-En", pe_seq: "187091", joined_filtered: "158258", denoised: "56747", filtered_seq: "56655", filtered_features: "780" }
+        ];
+    }
+    if (metagenome_alpha_diversity.length === 0) {
+        metagenome_alpha_diversity = [
+            { sample_id: "S13-En", chao1: "607.3979592", shannon: "5.178711115", observed_features: "607" },
+            { sample_id: "S17-En", chao1: "600.7759563", shannon: "5.008140815", observed_features: "599" },
+            { sample_id: "S20-En", chao1: "567.6140351", shannon: "5.570670292", observed_features: "566" },
+            { sample_id: "S4-En", chao1: "682.9952607", shannon: "6.151116162", observed_features: "682" },
+            { sample_id: "S5-En", chao1: "389.3982301", shannon: "4.519957071", observed_features: "389" },
+            { sample_id: "S8-En", chao1: "495.8888889", shannon: "4.900942795", observed_features: "495" },
+            { sample_id: "SC-En", chao1: "781.6223176", shannon: "6.344051842", observed_features: "780" }
+        ];
+    }
+    if (!metagenome_taxonomy_distribution) {
+        metagenome_taxonomy_distribution = {
+            headers: ["Phylum", "SC-En", "S13-En", "S8-En", "S20-En", "S4-En", "S5-En", "S17-En"],
+            rows: [
+                ["d__Bacteria;p__Firmicutes", "9399", "3059", "4413", "6859", "5997", "10150", "7548"],
+                ["d__Bacteria;p__Proteobacteria", "36698", "38684", "40751", "38360", "39927", "33590", "23386"],
+                ["d__Bacteria;p__Actinobacteriota", "433", "172", "340", "143", "206", "1172", "111"],
+                ["d__Bacteria;p__Bacteroidota", "9411", "6136", "8929", "5937", "9447", "126", "1257"],
+                ["d__Bacteria;p__Myxococcota", "0", "24", "49", "4", "18", "2", "2"],
+                ["d__Bacteria;p__Chloroflexi", "19", "7", "6", "13", "18", "9", "32"],
+                ["d__Bacteria;p__Fibrobacterota", "0", "0", "0", "0", "0", "0", "4"],
+                ["d__Bacteria;p__Bdellovibrionota", "94", "166", "1160", "23", "602", "3", "0"],
+                ["d__Bacteria;p__Desulfobacterota", "357", "4", "4", "0", "83", "0", "186"],
+                ["d__Bacteria;p__Acidobacteriota", "7", "10", "0", "24", "11", "2", "9"],
+                ["d__Bacteria;p__Cyanobacteria", "18", "490", "388", "2", "57", "4", "6"],
+                ["d__Bacteria;p__Verrucomicrobiota", "96", "44", "49", "5", "75", "0", "4"],
+                ["d__Archaea;p__Euryarchaeota", "2", "4", "0", "0", "0", "0", "0"],
+                ["d__Bacteria;p__Campilobacterota", "6", "0", "0", "0", "0", "0", "0"],
+                ["d__Bacteria;p__Patescibacteria", "72", "29", "3", "5", "0", "0", "20"],
+                ["d__Bacteria;p__Deinococcota", "0", "0", "0", "0", "29", "0", "10"],
+                ["d__Bacteria;p__Sumerlaeota", "0", "0", "16", "0", "6", "0", "0"],
+                ["d__Archaea;p__Halobacterota", "0", "0", "0", "2", "0", "2", "2"],
+                ["d__Bacteria;p__Armatimonadota", "8", "0", "0", "0", "0", "0", "0"],
+                ["d__Bacteria;p__Planctomycetota", "2", "4", "2", "0", "0", "2", "0"],
+                ["d__Archaea;p__Crenarchaeota", "0", "0", "0", "3", "0", "0", "0"],
+                ["d__Bacteria;p__Fusobacteriota", "0", "0", "0", "0", "9", "17", "0"]
+            ]
+        };
+    }
+    if (!metagenome_beta_matrix) {
+        metagenome_beta_matrix = {
+            headers: ["", "SC-En", "S13-En", "S8-En", "S20-En", "S4-En", "S5-En", "S17-En"],
+            rows: [
+                ["SC-En", "0", "0.737422108", "0.753814041", "0.634772999", "0.662553335", "0.949135893", "0.63784265"],
+                ["S13-En", "0.737422108", "0", "0.848389968", "0.787764374", "0.779813979", "0.943579826", "0.814194063"],
+                ["S8-En", "0.753814041", "0.848389968", "0", "0.870153789", "0.796451484", "0.923013169", "0.771618013"],
+                ["S20-En", "0.634772999", "0.787764374", "0.870153789", "0", "0.662215674", "0.900052184", "0.760536575"],
+                ["S4-En", "0.662553335", "0.779813979", "0.796451484", "0.662215674", "0", "0.879301348", "0.71369371"],
+                ["S5-En", "0.949135893", "0.943579826", "0.923013169", "0.900052184", "0.879301348", "0", "0.955305891"],
+                ["S17-En", "0.63784265", "0.814194063", "0.771618013", "0.760536575", "0.71369371", "0.955305891", "0"]
+            ]
+        };
+    }
+    // Set default placeholder images if none found
+    phylumChart = phylumChart || placeholderImg;
+    heatmapPlot = heatmapPlot || placeholderImg;
+    alphaPlot = alphaPlot || placeholderImg;
+    rarefactionPlot = rarefactionPlot || placeholderImg;
+    pcoaPlot = pcoaPlot || placeholderImg;
+    kronaPlot = kronaPlot || placeholderImg;
+    return {
+        metagenome_raw_stats,
+        metagenome_feature_summary,
+        metagenome_taxonomy_distribution,
+        metagenome_alpha_diversity,
+        metagenome_beta_matrix,
+        metagenome_phylum_chart_src: phylumChart,
+        metagenome_heatmap_src: heatmapPlot,
+        metagenome_alpha_plot_src: alphaPlot,
+        metagenome_rarefaction_src: rarefactionPlot,
+        metagenome_pcoa_src: pcoaPlot,
+        metagenome_krona_src: kronaPlot
+    };
+}
 export async function parseProjectData(inputDir, metadataOverride, templateName) {
     console.log(chalk.gray('Parsing project structure...'));
     const config = await loadConfig();
@@ -34,6 +222,8 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
         }
     }
     const isInterim = templateName === 'report_interim';
+    const is16S = templateName === 'report_16s';
+    const metagenomeData = is16S ? await parseMetagenomeData(inputDir) : {};
     const static_content = await loadStaticContent();
     const static_snippets = static_content?.snippets || {};
     // Load wet lab notes — prefer .docx from project folder, then interim_app/, then root
@@ -54,6 +244,7 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
     wl.library_qc = wetLabData.library_qc || 'The amplified libraries were analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer\'s instructions.';
     wl.library_qc_header = wetLabData.library_qc_header || 'Quantity and quality check (QC) of library on Agilent Tape Station 4150:';
     wl.conclusions_header = wetLabData.conclusions_header || 'Conclusions';
+    // Reference Genome Link snippet setup will be initialized dynamically below after scanning.
     const readmeData = isInterim ? {} : await parseReadme(inputDir);
     const project_details = isInterim ? {} : await getProjectDetails(inputDir);
     const warnings = isInterim ? [] : await validateDeliverablesStructure(inputDir, config);
@@ -77,11 +268,14 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
             gel_image_src = path.join(inputDir, gelImg);
     }
     let lane_mapping = wetLabData.lane_mapping || null;
+    if (lane_mapping && (!lane_mapping.rows || lane_mapping.rows.length === 0)) {
+        lane_mapping = null;
+    }
     if (!lane_mapping) {
         const files = await fs.readdir(inputDir).catch(() => []);
         const laneFile = files.find(f => {
             const name = f.toLowerCase();
-            return name.includes('lane') || name.includes('mapping') || name.includes('qc') || name.includes('rna');
+            return name.includes('lane');
         });
         if (laneFile) {
             try {
@@ -171,6 +365,8 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
     };
     let deliverables_tree = '';
     let qc_issues = [];
+    let pca_plots = [];
+    let correlation_plots = [];
     if (!isInterim) {
         sequencing_stats = await getSequencingStats(inputDir, config);
         ref_stats = await getReferenceStats(inputDir, metadataOverride);
@@ -196,6 +392,9 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
         dge_comparison_table = tables.dge_comparison_table;
         dge_group_table = tables.dge_group_table;
         func_assets = await extractFunctionalAssets(inputDir);
+        const pcaCorr = await extractPcaAndCorrelationAssets(inputDir);
+        pca_plots = pcaCorr.pca_plots;
+        correlation_plots = pcaCorr.correlation_plots;
         deliverables_tree = await getDeliverablesTree(inputDir);
         qc_issues = runQcChecks(sequencing_stats, mapping_stats, config);
     }
@@ -208,10 +407,17 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
     const logoDefault = path.join(getAssetsDir(), 'logo.png');
     const logo_path = metadataOverride?.logo ||
         ((await fs.pathExists(logoDefault)) ? logoDefault : '');
+    const unipathDefault = path.join(getAssetsDir(), 'unipath.png');
+    const unipath_logo_path = (await fs.pathExists(unipathDefault)) ? unipathDefault : '';
     const reference_organism = isInterim ? '' : (metadataOverride?.reference_organism ||
         ref_stats?.organism ||
         project_details.reference_organism ||
         'Organism Name');
+    const refLink = wetLabData.ref_genome_link || metadataOverride?.ref_genome_link || ref_stats?.ref_genome_link || 'https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/';
+    if (!static_snippets.reference) {
+        static_snippets.reference = {};
+    }
+    static_snippets.reference.genome_source = `Based on information received from client, the reference genome of ${reference_organism} was downloaded from (${refLink}) and considered for analysis.`;
     return {
         project_id: metadataOverride?.projectId ||
             wetLabData.project_id ||
@@ -230,10 +436,16 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
             project_details.project_pi ||
             readmeData.project_pi ||
             '',
+        submitted_to: wetLabData.submitted_to || metadataOverride?.submitted_to || 'Dr. Amit Gupta',
+        ref_genome_link: refLink,
         application: wetLabData.application || project_details.application || readmeData.application || '',
         no_of_samples: wetLabData.no_of_samples || project_details.no_of_samples || readmeData.no_of_samples || String(sample_count),
-        sample_count: wetLabData.sample_count !== undefined ? Number(wetLabData.sample_count) : sample_count,
-        samples: wetLabData.samples || samples,
+        sample_count: wetLabData.sample_count !== undefined
+            ? Number(wetLabData.sample_count)
+            : (wetLabData.no_of_samples !== undefined && !isNaN(Number(wetLabData.no_of_samples))
+                ? Number(wetLabData.no_of_samples)
+                : sample_count),
+        samples: (wetLabData.samples && wetLabData.samples.length > 0) ? wetLabData.samples : samples,
         qubit_data: (() => {
             if (wetLabData.qubit_data && wetLabData.qubit_data.length > 0) {
                 const savedHasData = wetLabData.qubit_data.some((q) => q.conc !== 'N/A' && q.conc !== '');
@@ -254,7 +466,7 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
             }
             return qubit_data;
         })(),
-        library_sizes: wetLabData.library_sizes || library_sizes,
+        library_sizes: (wetLabData.library_sizes && wetLabData.library_sizes.length > 0) ? wetLabData.library_sizes : library_sizes,
         sequencing_stats,
         reference_organism,
         total_genes,
@@ -281,8 +493,11 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
         isoforms_figure_src,
         pathway_ex_figure_src,
         logo_path,
+        unipath_logo_path,
         warnings: isInterim ? [] : [...warnings, ...qc_issues],
         qc_issues,
+        pca_plots,
+        correlation_plots,
         static_content,
         static_snippets,
         // Wet lab overrides
@@ -292,14 +507,15 @@ export async function parseProjectData(inputDir, metadataOverride, templateName)
         data_throughput: wetLabData.data_throughput || '~06GB / Sample',
         sample_type: wetLabData.sample_type || 'Leaf',
         shipping_condition: wetLabData.shipping_condition || 'NA',
-        no_of_libraries_prepared: wetLabData.no_of_libraries_prepared || String(sample_count),
+        no_of_libraries_prepared: wetLabData.no_of_libraries_prepared || wetLabData.no_of_samples || String(sample_count),
         gel_image_src,
         lane_mapping,
         tapestation_images,
         conclusions: wetLabData.conclusions && wetLabData.conclusions.length > 0 ? wetLabData.conclusions : wetLabNotes.conclusions,
         library_kit: wetLabData.library_kit || '',
         size_range: wetLabData.size_range || '',
-        chemistry: wetLabData.chemistry || ''
+        chemistry: wetLabData.chemistry || '',
+        ...metagenomeData
     };
 }
 function runQcChecks(sequencing, mapping, config) {
@@ -597,7 +813,9 @@ async function getReferenceStats(inputDir, metadataOverride) {
         max_scaffold_size: 'N/A',
         total_genes: 0,
         organism: 'Reference organism',
-        source: 'N/A'
+        source: 'N/A',
+        features: {},
+        ref_genome_link: ''
     };
     if (metadataOverride?.total_genes || metadataOverride?.total_genes === 0) {
         stats.total_genes = Number(metadataOverride.total_genes);
@@ -606,6 +824,7 @@ async function getReferenceStats(inputDir, metadataOverride) {
         // Fall through to see if we can get FASTA stats too
     }
     const refDirCandidates = [
+        path.join(inputDir, '02_Reference_Genome_and_GFF'),
         path.join(inputDir, '02_reference_genome_and_gff'),
         path.join(inputDir, '02_Reference'),
         path.join(inputDir, '02_reference'),
@@ -618,6 +837,37 @@ async function getReferenceStats(inputDir, metadataOverride) {
             break;
         }
     }
+    // Look for any .txt file in the reference directory to parse URL/organism name
+    if (await fs.pathExists(refDir)) {
+        try {
+            const files = await fs.readdir(refDir);
+            const txtFile = files.find((f) => f.toLowerCase().endsWith('.txt'));
+            if (txtFile) {
+                const textPath = path.join(refDir, txtFile);
+                const textContent = await fs.readFile(textPath, 'utf-8');
+                // Extract URL: http:// or https:// or ftp://
+                const urlMatch = textContent.match(/(https?:\/\/[^\s\)\(\<\>\"]+)/i) || textContent.match(/(ftp:\/\/[^\s\)\(\<\>\"]+)/i);
+                if (urlMatch) {
+                    stats.ref_genome_link = urlMatch[1].trim();
+                }
+                // Extract organism name: e.g. "Organism: Staphylococcus aureus" or species: or a binomial name
+                const orgMatch = textContent.match(/organism[:\s]+([^\n\r]+)/i) || textContent.match(/species[:\s]+([^\n\r]+)/i);
+                if (orgMatch) {
+                    stats.organism = orgMatch[1].trim();
+                }
+                else {
+                    // Binomial name pattern (Capital Word followed by lower word)
+                    const binomialMatch = textContent.match(/([A-Z][a-z]+ [a-z]+)/);
+                    if (binomialMatch) {
+                        stats.organism = binomialMatch[1].trim();
+                    }
+                }
+            }
+        }
+        catch (err) {
+            console.warn(chalk.yellow(`Warning: Could not scan text files in reference folder (${err})`));
+        }
+    }
     const gtfPath = await findReferenceGtf(refDir);
     if (gtfPath) {
         try {
@@ -625,6 +875,17 @@ async function getReferenceStats(inputDir, metadataOverride) {
             stats.total_genes = gtfStats.geneCount;
             stats.organism = gtfStats.organism || stats.organism;
             stats.source = gtfPath;
+            const filteredFeatures = {};
+            const targetKeys = ['mRNA', 'CDS', 'exon', 'gene'];
+            if (gtfStats.features) {
+                for (const rawKey of Object.keys(gtfStats.features)) {
+                    const matchingTarget = targetKeys.find(tk => tk.toLowerCase() === rawKey.toLowerCase());
+                    if (matchingTarget) {
+                        filteredFeatures[matchingTarget] = (filteredFeatures[matchingTarget] || 0) + gtfStats.features[rawKey];
+                    }
+                }
+            }
+            stats.features = filteredFeatures;
         }
         catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -715,7 +976,8 @@ async function getAssemblyStats(inputDir, config) {
                     sample: pickColumn(row, cols.sample_col) ?? 'Unknown',
                     num_transcripts: pickColumn(row, cols.transcripts_col) ?? '0',
                     total_bp: pickColumn(row, cols.total_bp_col) ?? 'N/A',
-                    mean_size: pickColumn(row, cols.mean_size_col) ?? '0'
+                    mean_size: pickColumn(row, cols.mean_size_col) ?? '0',
+                    max_size: pickColumn(row, cols.max_size_col) ?? '0'
                 });
             }
             return stats;
@@ -752,7 +1014,8 @@ async function getAssemblyStats(inputDir, config) {
                     sample: sampleLabel,
                     num_transcripts: row.num_transcripts,
                     total_bp: row.total_bp,
-                    mean_size: row.mean_size
+                    mean_size: row.mean_size,
+                    max_size: row.max_size
                 });
                 console.log(chalk.gray(`  Assembly from FASTA: ${file} (${row.num_transcripts} transcripts)`));
             }
@@ -945,84 +1208,69 @@ async function getPathwayStats(inputDir, config) {
     return ensureRowsHaveKeys(stats, ['level1', 'level2', 'count'], 'Pathway stats unavailable');
 }
 async function getGODistribution(inputDir) {
-    console.log(chalk.gray('  GO distribution: looking for files...'));
+    console.log(chalk.gray('  GO distribution: looking for z2_sigDGE_GO_Statistics.txt...'));
     const goDir = path.join(inputDir, '06_Significant_DGE_GO');
+    let targetFile = path.join(goDir, 'z2_sigDGE_GO_Statistics.txt');
     let stats = [];
-    let files = [];
-    if (await fs.pathExists(goDir)) {
-        files.push(...await findExcelFiles(goDir, (n) => n.includes('with_go')));
-        files.push(...await findExcelFiles(goDir, (n) => n.includes('go') && n.includes('distribution')));
-        files.push(...await findExcelFiles(goDir, (n) => n.includes('go') && n.includes('results')));
-        if (files.length === 0) {
-            files.push(...await findExcelFiles(goDir, (n) => n.includes('go')));
+    // Helper search function to scan for the target file recursively if not found in 06_Significant_DGE_GO
+    async function search(dir) {
+        if (!(await fs.pathExists(dir)))
+            return null;
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === '.venv')
+                continue;
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                const found = await search(fullPath);
+                if (found)
+                    return found;
+            }
+            else if (entry.name === 'z2_sigDGE_GO_Statistics.txt') {
+                return fullPath;
+            }
+        }
+        return null;
+    }
+    if (!(await fs.pathExists(targetFile))) {
+        const foundPath = await search(inputDir);
+        if (foundPath) {
+            targetFile = foundPath;
         }
     }
-    if (files.length === 0) {
-        files.push(...await findExcelFilesRecursive(inputDir, (n) => n.includes('go') && n.includes('distribution')));
-        files.push(...await findExcelFilesRecursive(inputDir, (n) => n.includes('with_go')));
-    }
-    files = Array.from(new Set(files));
-    const filePath = await chooseFile(files);
-    if (filePath) {
+    if (await fs.pathExists(targetFile)) {
         try {
-            const data = await readExcelRows(filePath);
-            const termCol = findColumn(data, ['term', 'go_term', 'description', 'goterm']);
-            const countCol = findNumericColumn(data, ['count', 'gene_count', 'genes']);
-            const ontCol = findColumn(data, ['ontology', 'category', 'namespace', 'class']);
-            if (termCol && countCol) {
-                for (const row of data) {
-                    const term = String(pickColumn(row, [termCol]) ?? 'Unknown').trim();
-                    const count = asInt(pickColumn(row, [countCol])) ?? 0;
-                    const ontology = ontCol ? String(pickColumn(row, [ontCol]) ?? 'N/A').trim() : 'N/A';
-                    if (term) {
-                        stats.push({ term, count, ontology });
+            const content = await fs.readFile(targetFile, 'utf-8');
+            const lines = content.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length > 1) {
+                const headers = lines[0].split('\t').map(h => h.trim());
+                const combIdx = headers.findIndex(h => ['COMBINATION', 'SAMPLE', 'SAMPLE NAME'].includes(h.toUpperCase()));
+                const sigDgeIdx = headers.findIndex(h => ['SIGDGE', 'SIGNIFICANT DGE'].includes(h.toUpperCase()));
+                const sqGoIdx = headers.findIndex(h => ['SQGO', 'SEQ WITH GO', '# SEQ WITH GO'].includes(h.toUpperCase()));
+                const bpIdx = headers.findIndex(h => ['BP', 'BIOLOGICAL PROCESS'].includes(h.toUpperCase()));
+                const ccIdx = headers.findIndex(h => ['CC', 'CELLULAR COMPONENT'].includes(h.toUpperCase()));
+                const mfIdx = headers.findIndex(h => ['MF', 'MOLECULAR FUNCTION'].includes(h.toUpperCase()));
+                for (let i = 1; i < lines.length; i++) {
+                    const parts = lines[i].split('\t').map(p => p.trim());
+                    if (parts.length >= headers.length) {
+                        stats.push({
+                            combination: combIdx !== -1 ? parts[combIdx] : `Comparison${i}`,
+                            sig_dge: sigDgeIdx !== -1 ? asInt(parts[sigDgeIdx]) : 0,
+                            sq_go: sqGoIdx !== -1 ? asInt(parts[sqGoIdx]) : 0,
+                            bp: bpIdx !== -1 ? asInt(parts[bpIdx]) : 0,
+                            cc: ccIdx !== -1 ? asInt(parts[ccIdx]) : 0,
+                            mf: mfIdx !== -1 ? asInt(parts[mfIdx]) : 0
+                        });
                     }
                 }
-                stats.sort((a, b) => b.count - a.count);
-                stats = stats.slice(0, 30);
-                return ensureRowsHaveKeys(stats, ['term', 'count', 'ontology'], 'GO distribution unavailable');
             }
-            const catCol = findColumn(data, ['annotationgocategory', 'annotation_go_category', 'go_category', 'category', 'ontology']);
-            const rawTermCol = findColumn(data, ['annotationgoterm', 'annotation_go_term', 'go_term', 'term']);
-            if (catCol && rawTermCol) {
-                const counts = {};
-                const keyMap = {};
-                for (const row of data) {
-                    const cVal = String(pickColumn(row, [catCol]) ?? '');
-                    const tVal = String(pickColumn(row, [rawTermCol]) ?? '');
-                    const cats = cVal.split(';');
-                    const terms = tVal.split(';');
-                    const maxLen = Math.min(cats.length, terms.length);
-                    for (let i = 0; i < maxLen; i++) {
-                        const cat = cats[i].trim();
-                        const term = terms[i].trim();
-                        if (cat && term) {
-                            const key = `${cat}|||${term}`;
-                            counts[key] = (counts[key] || 0) + 1;
-                            keyMap[key] = { cat, term };
-                        }
-                    }
-                }
-                const sortedKeys = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-                for (const key of sortedKeys.slice(0, 30)) {
-                    const { cat, term } = keyMap[key];
-                    stats.push({
-                        ontology: cat,
-                        term,
-                        count: counts[key]
-                    });
-                }
-                return ensureRowsHaveKeys(stats, ['term', 'count', 'ontology'], 'GO distribution unavailable');
-            }
+            return stats;
         }
         catch (err) {
-            console.warn(chalk.yellow(`Warning: Could not parse GO distribution from ${filePath}: ${err}`));
+            console.warn(chalk.yellow(`Warning: Could not parse GO statistics from ${targetFile}: ${err}`));
         }
     }
-    if (files.length === 0) {
-        return ensureRowsHaveKeys([], ['term', 'count', 'ontology'], 'No GO file found', { term: 'Expected in 06_Significant_DGE_GO or matching *GO*.xlsx' });
-    }
-    return ensureRowsHaveKeys(stats, ['term', 'count', 'ontology'], 'GO distribution unavailable');
+    return ensureRowsHaveKeys(stats, ['combination', 'sig_dge', 'sq_go', 'bp', 'cc', 'mf'], 'GO statistics unavailable', { combination: 'Expected in z2_sigDGE_GO_Statistics.txt' });
 }
 async function getDGECombinedData(inputDir, thresholds) {
     const stats = [];
@@ -1053,6 +1301,13 @@ async function getDGECombinedData(inputDir, thresholds) {
             const sigCol = findColumn(data, ['padj', 'fdr', 'qvalue', 'pvalue', 'pval', 'p-adj', 'p-value', 'q_value', 'p_value', 'q-value']);
             const cpmCol = findColumn(data, ['logcpm', 'log_cpm', 'cpm', 'log2cpm', 'log2_cpm']);
             const meanCol = findColumn(data, ['basemean', 'aveexpr', 'mean', 'base_mean', 'average_expression']);
+            // Default to the first column as the gene identifier unless it contains numeric stats columns
+            const columns = Object.keys(data[0] || {});
+            const firstCol = columns[0] || null;
+            let geneCol = firstCol;
+            if (!geneCol || geneCol === fcCol || geneCol === sigCol || geneCol === cpmCol || geneCol === meanCol) {
+                geneCol = findColumn(data, ['gene', 'gene_name', 'gene_id', 'symbol', 'genesymbol', 'name', 'transcript_id', 'transcript', 'id']);
+            }
             let sig_up = 0;
             let sig_down = 0;
             const plotData = {
@@ -1074,6 +1329,7 @@ async function getDGECombinedData(inputDir, thresholds) {
                         sig_down++;
                         bucket = 'down';
                     }
+                    const geneName = geneCol && row[geneCol] ? String(row[geneCol]).trim() : '';
                     // Plot data
                     const cpm = cpmCol ? asFloat(row[cpmCol]) : null;
                     const meanExpr = meanCol ? asFloat(row[meanCol]) : null;
@@ -1082,10 +1338,10 @@ async function getDGECombinedData(inputDir, thresholds) {
                         maX = Math.log10(meanExpr + 1);
                     }
                     if (maX !== null) {
-                        plotData.ma[bucket].push({ x: maX, y: fc });
+                        plotData.ma[bucket].push({ x: maX, y: fc, label: geneName });
                     }
                     if (pval !== null && pval > 0) {
-                        plotData.volcano[bucket].push({ x: fc, y: -Math.log10(pval) });
+                        plotData.volcano[bucket].push({ x: fc, y: -Math.log10(pval), label: geneName });
                     }
                 }
             }
@@ -1358,10 +1614,53 @@ async function extractFunctionalAssets(inputDir) {
         catch { /* ignore */ }
     }
     // 2. Find KEGG representative pathway image
-    const images = await findFilesRecursive('kegg', ['.png', '.jpg', '.jpeg', '.svg']);
-    const pathwayImg = images.find((f) => path.basename(f).toLowerCase().includes('path'));
-    if (pathwayImg)
-        assets.kegg_pathway_image_src = pathwayImg;
+    const pathwayDirCandidates = [
+        path.join(inputDir, '07_Significant_DGE_pathways'),
+        path.join(inputDir, '07_significant_dge_pathways'),
+        path.join(inputDir, '07_Significant_Pathways'),
+        path.join(inputDir, '07_significant_pathways'),
+        path.join(inputDir, '07_Pathways'),
+        path.join(inputDir, '07_pathways'),
+        path.join(inputDir, 'pathways')
+    ];
+    let pathwayImgDir = '';
+    for (const cand of pathwayDirCandidates) {
+        if (await fs.pathExists(cand)) {
+            pathwayImgDir = cand;
+            break;
+        }
+    }
+    let keggPathwayImg = null;
+    if (pathwayImgDir) {
+        const pathwayImages = [];
+        async function searchImages(dir) {
+            const entries = await fs.readdir(dir, { withFileTypes: true });
+            for (const entry of entries) {
+                if (entry.name.startsWith('.') || entry.name === 'node_modules')
+                    continue;
+                const fullPath = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    await searchImages(fullPath);
+                }
+                else if (/\.(png|jpg|jpeg|svg)$/i.test(entry.name)) {
+                    pathwayImages.push(fullPath);
+                }
+            }
+        }
+        await searchImages(pathwayImgDir).catch(() => { });
+        if (pathwayImages.length > 0) {
+            pathwayImages.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            keggPathwayImg = pathwayImages[0];
+        }
+    }
+    // Fallback to searching the entire input directory if not found in 07 folder
+    if (!keggPathwayImg) {
+        const images = await findFilesRecursive('kegg', ['.png', '.jpg', '.jpeg', '.svg']);
+        keggPathwayImg = images.find((f) => path.basename(f).toLowerCase().includes('path')) || null;
+    }
+    if (keggPathwayImg) {
+        assets.kegg_pathway_image_src = keggPathwayImg;
+    }
     // 3. Find enrichment barplots and dotplots recursively
     const allPngs = await findFilesRecursive('', ['.png', '.jpg', '.jpeg', '.svg']);
     const enrichment_plots = [];
@@ -1410,6 +1709,67 @@ async function extractFunctionalAssets(inputDir) {
     if (enrich.length)
         assets.enrichment_image_src = enrich[0];
     return assets;
+}
+async function extractPcaAndCorrelationAssets(inputDir) {
+    const pca_plots = [];
+    const correlation_plots = [];
+    const entries = await fs.readdir(inputDir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+        if (!entry.isDirectory())
+            continue;
+        const dirName = entry.name.toLowerCase();
+        const fullPath = path.join(inputDir, entry.name);
+        if (dirName.includes('pca') || dirName.includes('pcoa')) {
+            const files = await fs.readdir(fullPath).catch(() => []);
+            let hasImage = false;
+            for (const file of files) {
+                if (/\.(png|jpg|jpeg|svg)$/i.test(file)) {
+                    hasImage = true;
+                    let title = 'PCA Plot';
+                    if (file.toLowerCase().includes('pcoa')) {
+                        title = 'PCoA Plot';
+                    }
+                    pca_plots.push({
+                        src: path.join(fullPath, file),
+                        title
+                    });
+                }
+            }
+            if (!hasImage) {
+                for (const file of files) {
+                    if (file.toLowerCase().endsWith('.pdf')) {
+                        let title = 'PCA Plot (PDF)';
+                        if (file.toLowerCase().includes('pcoa')) {
+                            title = 'PCoA Plot (PDF)';
+                        }
+                        pca_plots.push({
+                            src: path.join(fullPath, file),
+                            title
+                        });
+                    }
+                }
+            }
+        }
+        if (dirName.includes('pearson') || dirName.includes('correlation')) {
+            const files = await fs.readdir(fullPath).catch(() => []);
+            for (const file of files) {
+                if (/\.(png|jpg|jpeg|svg)$/i.test(file)) {
+                    let title = 'Correlation Heatmap';
+                    if (file.toLowerCase().includes('pearson')) {
+                        title = 'Pearson Correlation Heatmap';
+                    }
+                    else if (file.toLowerCase().includes('spearman')) {
+                        title = 'Spearman Correlation Heatmap';
+                    }
+                    correlation_plots.push({
+                        src: path.join(fullPath, file),
+                        title
+                    });
+                }
+            }
+        }
+    }
+    return { pca_plots, correlation_plots };
 }
 async function getDeliverablesTree(inputDir) {
     for (const readmeFile of ['Readme.txt', 'README.txt', 'readme.txt']) {

@@ -24,7 +24,8 @@ const DEFAULT_CONFIG = {
             sample_col: ['Sample', 'Sample Name', 'sample'],
             transcripts_col: ['Number of Transcripts', 'Transcripts'],
             total_bp_col: ['Total (bp)', 'Total bp', 'Total Bases'],
-            mean_size_col: ['Mean Size', 'Mean Transcript Size']
+            mean_size_col: ['Mean Size', 'Mean Transcript Size'],
+            max_size_col: ['Max Size', 'Max Transcript Size', 'Max Size (bp)', 'Max transcript size (bp)', 'Max size (bp)', 'max_size']
         },
         dge_stats: {
             fc_col: ['logfc', 'log2fc', 'log2foldchange', 'logfoldchange', 'lfc'],

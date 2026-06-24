@@ -31,6 +31,7 @@ export async function parseGtfStats(gtfPath) {
     const genes = new Set();
     const transcripts = new Set();
     let organism = '';
+    const features = {};
     const rl = createInterface({
         input: createReadStream(gtfPath, { encoding: 'utf8' }),
         crlfDelay: Infinity
@@ -54,8 +55,12 @@ export async function parseGtfStats(gtfPath) {
         const parts = line.split('\t');
         if (parts.length < 9)
             continue;
-        const feature = parts[2]?.toLowerCase();
+        const rawFeature = parts[2]?.trim();
+        const feature = rawFeature?.toLowerCase();
         const attrs = parts[8] || '';
+        if (rawFeature) {
+            features[rawFeature] = (features[rawFeature] || 0) + 1;
+        }
         // Support common GFF3/GTF attribute keys
         const geneId = extractAttr(attrs, 'gene_id') || extractAttr(attrs, 'ID') || extractAttr(attrs, 'gene');
         const txId = extractAttr(attrs, 'transcript_id') || extractAttr(attrs, 'ID') || extractAttr(attrs, 'transcript');
@@ -76,7 +81,8 @@ export async function parseGtfStats(gtfPath) {
         geneCount: genes.size || transcripts.size,
         transcriptCount: transcripts.size,
         organism,
-        source: gtfPath
+        source: gtfPath,
+        features
     };
 }
 /** Count FASTA/FNA sequences and calculate genome stats without loading the whole file. */

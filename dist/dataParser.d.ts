@@ -8,6 +8,8 @@ export interface ProjectData {
     client_name: string;
     client_org: string;
     project_pi: string;
+    submitted_to?: string;
+    ref_genome_link?: string;
     application: string;
     no_of_samples: string;
     sample_count: number;
@@ -65,8 +67,28 @@ export interface ProjectData {
     chemistry?: string;
     pathway_ex_figure_src: string;
     logo_path: string;
+    unipath_logo_path?: string;
     warnings: string[];
     qc_issues: string[];
+    pca_plots?: Array<{
+        src: string;
+        title: string;
+    }>;
+    correlation_plots?: Array<{
+        src: string;
+        title: string;
+    }>;
+    metagenome_raw_stats?: Array<Record<string, unknown>>;
+    metagenome_feature_summary?: Array<Record<string, unknown>>;
+    metagenome_taxonomy_distribution?: TableData | null;
+    metagenome_alpha_diversity?: Array<Record<string, unknown>>;
+    metagenome_beta_matrix?: TableData | null;
+    metagenome_phylum_chart_src?: string;
+    metagenome_heatmap_src?: string;
+    metagenome_alpha_plot_src?: string;
+    metagenome_rarefaction_src?: string;
+    metagenome_pcoa_src?: string;
+    metagenome_krona_src?: string;
 }
 export declare function parseProjectData(inputDir: string, metadataOverride?: Record<string, unknown>, templateName?: string): Promise<ProjectData>;
 export interface WetLabNotes {

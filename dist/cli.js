@@ -23,7 +23,7 @@ program
     .option('--client-name <name>', 'Client name override')
     .option('--logo <path>', 'Custom logo path')
     .option('--template <name>', 'Template name (without .ejs)', DEFAULT_TEMPLATE)
-    .option('--no-embed-images', 'Do not embed images as data URIs before PDF export')
+    .option('--no-embed-images', 'Do not embed images as data URIs in the report')
     .option('--headless <boolean>', 'Run Puppeteer headless', 'true')
     .action(async (options) => {
     console.log(chalk.blue.bold('\n🧬 NGS Report Generator\n'));

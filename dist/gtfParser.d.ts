@@ -3,6 +3,7 @@ export interface GtfStats {
     transcriptCount: number;
     organism: string;
     source: string;
+    features: Record<string, number>;
 }
 /** Stream-count genes/transcripts from GTF/GFF (safe for large annotation files). */
 export declare function parseGtfStats(gtfPath: string): Promise<GtfStats>;

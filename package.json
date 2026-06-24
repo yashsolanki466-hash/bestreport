@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "type": "module",
   "description": "NGS Report Generation CLI - High-quality HTML/PDF/DOCX reports from project deliverables",
-  "main": "dist/cli.js",
+  "main": "electron/main.js",
   "bin": {
     "ngs-report": "dist/cli.js"
   },
@@ -15,11 +15,37 @@
     "gui": "node --max-old-space-size=8192 node_modules/vite/bin/vite.js --config interim_app/vite.config.ts",
     "build:gui": "vite build",
     "build:interim": "vite build --config interim_app/vite.config.ts",
+    "start:interim": "node interim_server.js",
     "generate": "node dist/cli.js generate",
     "validate": "node dist/cli.js validate",
     "watch": "node dist/cli.js watch",
     "batch": "node dist/cli.js batch",
-    "test:cli": "npm run build && node --test dist/columnUtils.test.js dist/gtfParser.test.js dist/dataParser.test.js"
+    "test:cli": "npm run build && node --test dist/columnUtils.test.js dist/gtfParser.test.js dist/dataParser.test.js",
+    "electron:dev": "electron electron/main.js --dev",
+    "electron:start": "npm run build && npm run build:interim && electron electron/main.js",
+    "electron:package": "npm run build && npm run build:interim && electron-builder build --win"
+  },
+  "build": {
+    "appId": "com.unipath.ngsreport",
+    "productName": "NGSReportGenerator",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "interim_app/dist/**/*",
+      "templates/**/*",
+      "assets/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -45,6 +71,8 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.18",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",

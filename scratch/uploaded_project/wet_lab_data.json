@@ -1,0 +1,154 @@
+{
+  "project_id": "260086",
+  "report_date": "24-06-2026",
+  "client_name": "Minnu Jose",
+  "submitted_to": "Minnu Jose",
+  "ref_genome_link": "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/",
+  "client_org": "University of Calicut",
+  "service_type": "Transcriptome Sequencing",
+  "platform": "Illumina Novaseq X Plus",
+  "read_length": "2 X 150 bp PE",
+  "no_of_samples": "11",
+  "no_of_libraries_prepared": "11",
+  "data_throughput": "~08-09GB / Sample",
+  "sample_type": "Tissue",
+  "shipping_condition": "Dry Ice",
+  "samples": [
+    "Control Brain",
+    "Control Heart",
+    "Control Muscle",
+    "Test Brain",
+    "Test Heart",
+    "Test Muscle"
+  ],
+  "qubit_data": [
+    {
+      "sample_id": "Control Brain",
+      "conc": "43",
+      "vol": "50",
+      "yield": "2.15",
+      "remarks": "QC PASS",
+      "qc_status": "PASS"
+    },
+    {
+      "sample_id": "Control Heart",
+      "conc": "20.2",
+      "vol": "50",
+      "yield": "1.01",
+      "remarks": "QC PASS",
+      "qc_status": "PASS"
+    },
+    {
+      "sample_id": "Control Muscle",
+      "conc": "25.2",
+      "vol": "50",
+      "yield": "1.26",
+      "remarks": "QC PASS",
+      "qc_status": "PASS"
+    },
+    {
+      "sample_id": "Test Brain",
+      "conc": "69.6",
+      "vol": "50",
+      "yield": "3.48",
+      "remarks": "QC PASS",
+      "qc_status": "PASS"
+    },
+    {
+      "sample_id": "Test Heart",
+      "conc": "114",
+      "vol": "50",
+      "yield": "5.7",
+      "remarks": "QC PASS",
+      "qc_status": "PASS"
+    },
+    {
+      "sample_id": "Test Muscle",
+      "conc": "45",
+      "vol": "50",
+      "yield": "2.25",
+      "remarks": "QC PASS",
+      "qc_status": "PASS"
+    }
+  ],
+  "library_sizes": [
+    350,
+    350,
+    350,
+    350,
+    350,
+    350
+  ],
+  "gel_image_src": "C:\\Users\\pooja\\Documents\\nodreport\\scratch\\uploaded_project\\Interim report of NGS_260086_extracted\\image3.png",
+  "lane_mapping": {
+    "headers": [
+      "Lane id",
+      "Sample name",
+      "Lane id",
+      "Sample name",
+      "Lane id",
+      "Sample name"
+    ],
+    "rows": [
+      [
+        "1",
+        "Control Brain",
+        "2",
+        "Control Heart",
+        "3",
+        "Control Muscle"
+      ],
+      [
+        "4",
+        "Test Brain",
+        "5",
+        "Test Heart",
+        "6",
+        "Test Muscle"
+      ]
+    ]
+  },
+  "tapestation_images": [
+    {
+      "sample_id": "Control Brain",
+      "src": "C:\\Users\\pooja\\Documents\\nodreport\\scratch\\uploaded_project\\Interim report of NGS_260086_extracted\\image4.png"
+    },
+    {
+      "sample_id": "Control Heart",
+      "src": "C:\\Users\\pooja\\Documents\\nodreport\\scratch\\uploaded_project\\Interim report of NGS_260086_extracted\\image5.png"
+    },
+    {
+      "sample_id": "Control Muscle",
+      "src": "C:\\Users\\pooja\\Documents\\nodreport\\scratch\\uploaded_project\\Interim report of NGS_260086_extracted\\image6.png"
+    },
+    {
+      "sample_id": "Test Brain",
+      "src": "C:\\Users\\pooja\\Documents\\nodreport\\scratch\\uploaded_project\\Interim report of NGS_260086_extracted\\image7.png"
+    }
+  ],
+  "rna_isolation_qc": "RNA sample was extracted from tissue sample using QIAGEN RNeasy mini kit (CAT.NO:74106). RNA quantity was measured using Qubit® 4.0 fluorometer and quality were analyzed by using 1% agarose gel.",
+  "rna_isolation_qc_header": "Isolation and Quantitative analysis of RNA:",
+  "library_preparation": "The paired-end sequencing library was prepared using NEBNext® Ultra™ RNA Library Prep Kit for Illumina. (NEB #E7770). The library preparation process was initiated with 100 ng input. Ribosomal RNA was removed using depletion was carried out using ribodepletion kit KAPA RNA HyperPrep Kit with RiboErase (HMR), Cat no: KK8561) as per user manual. Ribo-depleted RNA was subjected to fragmentation, first & second-strand cDNA synthesis, end-repair, 3´ adapter ligation, selective enrichment of adapter-ligated DNA fragments through PCR amplification, followed by validation of Library on Agilent 4150 tape station. The final library was pooled with other samples, denatured & loaded on to flow cell. On the flowcell, cluster generation & sequencing was performed using Illumina Novaseq X plus platform to generate 2×150bp paired-end (PE) reads.",
+  "library_preparation_header": "Preparation of library:",
+  "cluster_generation": "After obtaining the Qubit concentration for the library and the mean peak size from Tape Station profile, library will be loaded onto Illumina Novaseq X Plus for cluster generation and sequencing. Paired-End sequencing allows the template fragments to be sequenced in both the forward and reverse directions. The library molecules will bind to complementary adapter oligos on paired-end flow cell. The adapters are designed to allow selective cleavage of the forward strands after re-synthesis of the reverse strand during sequencing. The copied reverse strand is then used to sequence from the opposite end of the fragment.",
+  "cluster_generation_header": "Cluster Generation and Sequencing:",
+  "library_qc": "The amplified library analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer's instructions.",
+  "library_qc_header": "Quantity and quality check (QC) of library on Agilent Tape Station 4150:",
+  "conclusions": [
+    "- The library was prepared from the samples using KAPA RNA HyperPrep Kit with RiboErase (HMR), Cat no: KK8561.\n- The average size of library is 342bp.\n- The library will be sequenced on Illumina Novaseq X plus platform using 2x150 bp PE chemistry."
+  ],
+  "conclusions_header": "Conclusions:",
+  "selected_template_id": "hmr",
+  "advanced": {
+    "autoNumberFigures": true,
+    "autoGenerateConclusions": true,
+    "autoInsertHeaderFooter": true,
+    "confidentialWatermark": false,
+    "useClientBranding": false
+  },
+  "branding": {
+    "headerText": "UNIGENOME BIOTECH - INTERIM REPORT",
+    "footerText": "Page {page} of {total}",
+    "confidentialStatement": "Confidential - For Internal Use Only"
+  }
+}

@@ -47,16 +47,13 @@ describe('parseProjectData', () => {
     XLSX.utils.book_append_sheet(pathwayWb, pathwayWs, 'Sheet1');
     await XLSX.writeFile(pathwayWb, path.join(pathwayDir, 'kegg_pathways.xlsx'));
 
-    // Create a mock GO distribution file
-    // We use a pre-summarized format to test Case 1 of getGODistribution
-    const goWb = XLSX.utils.book_new();
-    const goWs = XLSX.utils.json_to_sheet([
-      { 'Ontology': 'BP', 'Term': 'transcription', 'genes': 'AT1G02010', 'Count': 8 },
-      { 'Ontology': 'MF', 'Term': 'kinase activity', 'genes': 'AT1G02020', 'Count': 18 },
-      { 'Ontology': 'CC', 'Term': 'nucleus', 'genes': 'AT1G02030', 'Count': 12 }
-    ]);
-    XLSX.utils.book_append_sheet(goWb, goWs, 'Sheet1');
-    await XLSX.writeFile(goWb, path.join(goDir, 'go_distribution.xlsx'));
+    // Create a mock GO distribution file (z2_sigDGE_GO_Statistics.txt)
+    const goContent = [
+      'COMBINATION\tSigDGE\tSqGO\tBP\tCC\tMF',
+      'Comparison1\t4\t2\t0\t1\t0',
+      'Comparison2\t10\t5\t3\t1\t4'
+    ].join('\n');
+    await fs.outputFile(path.join(goDir, 'z2_sigDGE_GO_Statistics.txt'), goContent);
 
     try {
       const data = await parseProjectData(tempProjectDir);
@@ -70,18 +67,67 @@ describe('parseProjectData', () => {
       assert.equal(data.pathway_stats[2].level2, 'Energy metabolism');
       assert.equal(data.pathway_stats[2].count, 5);
 
-      // Verify GO distribution stats: should be sorted by count descending (kinase activity (18) -> nucleus (12) -> transcription (8))
-      assert.equal(data.go_distribution.length, 3);
-      assert.equal(data.go_distribution[0].term, 'kinase activity');
-      assert.equal(data.go_distribution[0].count, 18);
-      assert.equal(data.go_distribution[1].term, 'nucleus');
-      assert.equal(data.go_distribution[1].count, 12);
-      assert.equal(data.go_distribution[2].term, 'transcription');
-      assert.equal(data.go_distribution[2].count, 8);
+      // Verify GO distribution stats parsed from the text file
+      assert.equal(data.go_distribution.length, 2);
+      assert.equal(data.go_distribution[0].combination, 'Comparison1');
+      assert.equal(data.go_distribution[0].sig_dge, 4);
+      assert.equal(data.go_distribution[0].sq_go, 2);
+      assert.equal(data.go_distribution[0].bp, 0);
+      assert.equal(data.go_distribution[0].cc, 1);
+      assert.equal(data.go_distribution[0].mf, 0);
+
+      assert.equal(data.go_distribution[1].combination, 'Comparison2');
+      assert.equal(data.go_distribution[1].sig_dge, 10);
+      assert.equal(data.go_distribution[1].sq_go, 5);
+      assert.equal(data.go_distribution[1].bp, 3);
+      assert.equal(data.go_distribution[1].cc, 1);
+      assert.equal(data.go_distribution[1].mf, 4);
+
 
     } finally {
       // Clean up
       await fs.remove(tempProjectDir);
     }
   });
+
+  it('falls back to auto-discovering lane map files if wetLabData lane_mapping has empty rows', async () => {
+    const tempProjectDir = path.join(__dirname, '..', 'fixtures', 'temp_test_lane_project');
+    await fs.ensureDir(tempProjectDir);
+
+    // Create a mock metadata.json
+    await fs.writeJson(path.join(tempProjectDir, 'metadata.json'), {
+      project_id: 'LANE-TEST',
+      samples: ['S1', 'S2']
+    });
+
+    // Create wet_lab_data.json with empty lane_mapping rows
+    await fs.writeJson(path.join(tempProjectDir, 'wet_lab_data.json'), {
+      project_id: 'LANE-TEST',
+      lane_mapping: {
+        headers: ['Lane id', 'Sample name', 'Lane id', 'Sample name', 'Lane id', 'Sample name'],
+        rows: []
+      }
+    });
+
+    // Create a mock LANE.csv file
+    const laneCsvContent = [
+      'Lane id,Sample name',
+      '1,S1',
+      '2,S2'
+    ].join('\n');
+    await fs.outputFile(path.join(tempProjectDir, 'LANE.csv'), laneCsvContent);
+
+    try {
+      const data = await parseProjectData(tempProjectDir);
+      assert.ok(data.lane_mapping);
+      assert.ok(data.lane_mapping.rows.length > 0);
+      assert.equal(data.lane_mapping.rows[0][0], '1');
+      assert.equal(data.lane_mapping.rows[0][1], 'S1');
+      assert.equal(data.lane_mapping.rows[0][2], '2');
+      assert.equal(data.lane_mapping.rows[0][3], 'S2');
+    } finally {
+      await fs.remove(tempProjectDir);
+    }
+  });
 });
+

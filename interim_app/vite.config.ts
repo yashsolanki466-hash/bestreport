@@ -28,6 +28,8 @@ export default defineConfig({
   ],
   server: {
     port: 5174,   // separate port so both apps can run simultaneously
+    host: '0.0.0.0',
+    allowedHosts: true,
   },
   resolve: {
     alias: {

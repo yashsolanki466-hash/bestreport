@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
 // Helper functions for client-side Excel parsing
@@ -113,29 +113,125 @@ const STATIC_TEMPLATES: StaticContentTemplate[] = [
     qcDescriptionHeader: 'Quantity and quality check (QC) of library on Agilent Tape Station 4150:',
     qcDescriptionContent: 'The amplified libraries were analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer\'s instructions.',
     conclusionHeader: 'Conclusions:',
-    conclusionContent: '- The libraries were prepared from the samples by KAPA mRNA Hyper Prep Kit for Illumina (CAT #KK8581).\n- The average size of libraries is 479bp, 503bp, 487bp, 539bp, 464bp, 488bp, 493bp, 489bp, 493bp, 489bp, 485bp, 458bp, 447bp, 458bp and 448bp for Hcfb_a, Hcfb_b, Hcfb_c, Hcfa+b_a, Hcfa+b_b, Hcfa+b_c, Hcfa 5dh+_a, Hcfa 5dh+_b, Hcfa 5dh+_c, WT 5dh+_a, WT 5dh+_b, WT 5dh+_c, Yoh.04 mm_a, Yoh.04 mm_b and Yoh.04 mm_c.\n- The libraries were sequenced on Illumina Novaseq X Plus platform using 2-x 150 bp chemistry to generate ~06-08GB/Sample.'
+    conclusionContent: '- The libraries were prepared from the samples by NEBNext® Ultra™ RNA Library Prep Kit for Illumina. (NEB #E7770).\n- The average size of libraries is 479bp, 503bp, 487bp, 539bp, 377bp, 424bp, 469bp, 456bp, 413bp and 405bp for 01460HNTB, 01462HNTB, 01464HNTB, 01469HNTB, 01470HNTB, 01471HNTB, 01473HNTB and 01474HNTB.\n- The libraries were sequenced on Illumina Novaseq X Plus platform using 2-x 150 bp chemistry to generate ~08-9GB/Sample.'
   },
   {
     id: 'hmr',
-    name: 'NGS_RNA-Ribo-HMR',
-    description: 'Eukaryotic ribodepletion workflow using the NEBNext® Ultra™ RNA Kit (NEB #E7770) and KAPA RNA HyperPrep Kit with RiboErase (HMR) (Cat no: KK8561).',
-    diffExplanation: 'Uses NEBNext Ultra RNA Kit (100 ng input) with KAPA RiboErase (HMR) (Cat no: KK8561), Trizol RNA isolation, and Novaseq X Plus sequencing (~8-9GB/sample). Has separate Cluster Gen section.',
-    rnaExtractionHeader: 'Extraction and Quantitative analysis of RNA:',
-    rnaExtractionContent: 'RNA was extracted from tissue samples using Trizol RNA isolation method RNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed by on 1% agarose gel',
+    name: 'KAPA RNA HyperPrep with RiboErase (HMR)',
+    description: 'Bacterial/Human/Mouse/Rat (HMR) ribodepletion workflow using the KAPA RNA HyperPrep Kit with RiboErase (HMR) (Cat no: KK8561) and QIAGEN RNeasy isolation.',
+    diffExplanation: 'Uses KAPA RNA HyperPrep Kit with RiboErase (HMR) (100 ng input), QIAGEN RNeasy isolation, and Novaseq X Plus sequencing. Has separate Cluster Gen section.',
+    rnaExtractionHeader: 'Isolation and Quantitative analysis of RNA:',
+    rnaExtractionContent: 'RNA sample was extracted from tissue sample using QIAGEN RNeasy mini kit (CAT.NO:74106). RNA quantity was measured using Qubit® 4.0 fluorometer and quality were analyzed by using 1% agarose gel.',
     libraryPrepHeader: 'Preparation of library:',
     libraryPrepContent: 'The paired-end sequencing library was prepared using NEBNext® Ultra™ RNA Library Prep Kit for Illumina. (NEB #E7770). The library preparation process was initiated with 100 ng input. Ribosomal RNA was removed using depletion was carried out using ribodepletion kit KAPA RNA HyperPrep Kit with RiboErase (HMR), Cat no: KK8561) as per user manual. Ribo-depleted RNA was subjected to fragmentation, first & second-strand cDNA synthesis, end-repair, 3´ adapter ligation, selective enrichment of adapter-ligated DNA fragments through PCR amplification, followed by validation of Library on Agilent 4150 tape station. The final library was pooled with other samples, denatured & loaded on to flow cell. On the flowcell, cluster generation & sequencing was performed using Illumina Novaseq X plus platform to generate 2×150bp paired-end (PE) reads.',
     sequencingHeader: 'Cluster Generation and Sequencing:',
-    sequencingContent: 'After obtaining the Qubit concentration for the library and the mean peak size from Tape Station profile, library will be loaded onto illumine Novaseq X Plus for cluster generation and sequencing. Paired-End sequencing allows the template fragments to be sequenced in both the forward and reverse directions. The library molecules will bind to complementary adapter oligos on paired-end flow cell. The adapters are designed to allow selective cleavage of the forward strands after re-synthesis of the reverse strand during sequencing. The copied reverse strand is then used to sequence from the opposite end of the fragment.',
+    sequencingContent: 'After obtaining the Qubit concentration for the library and the mean peak size from Tape Station profile, library will be loaded onto Illumina Novaseq X Plus for cluster generation and sequencing. Paired-End sequencing allows the template fragments to be sequenced in both the forward and reverse directions. The library molecules will bind to complementary adapter oligos on paired-end flow cell. The adapters are designed to allow selective cleavage of the forward strands after re-synthesis of the reverse strand during sequencing. The copied reverse strand is then used to sequence from the opposite end of the fragment.',
     qcDescriptionHeader: 'Quantity and quality check (QC) of library on Agilent Tape Station 4150:',
-    qcDescriptionContent: 'The amplified libraries were analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer\'s instructions.',
+    qcDescriptionContent: 'The amplified library analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer\'s instructions.',
     conclusionHeader: 'Conclusions:',
-    conclusionContent: '- The libraries were prepared from the samples by NEBNext® Ultra™ RNA Library Prep Kit for Illumina. (NEB #E7770).\n- The average size of libraries is 479bp, 503bp, 487bp, 539bp, 377bp, 424bp, 469bp, 456bp, 413bp and 405bp for 01460HNTB, 01462HNTB, 01464HNTB, 01466HNTB, 01468HNTB, 01469HNTB, 01470HNTB, 01471HNTB, 01473HNTB and 01474HNTB.\n- The libraries were sequenced on Illumina Novaseq X Plus platform using 2-x 150 bp chemistry to generate ~08-9GB/Sample.'
+    conclusionContent: '- The library was prepared from the samples using KAPA RNA HyperPrep Kit with RiboErase (HMR), Cat no: KK8561.\n- The average size of library is 342bp.\n- The library will be sequenced on Illumina Novaseq X plus platform using 2x150 bp PE chemistry.'
+  },
+  {
+    id: '16s',
+    name: '16s V3-V4 Metagenome',
+    description: '16s V3-V4 Metagenome Sequencing & Analysis on Illumina Platform.',
+    diffExplanation: 'Uses Nextera XT Indices kit, Alexgen Soil DNA Kit, and PE300 kit on Miseq platform.',
+    rnaExtractionHeader: 'Isolation and Quantitative analysis of DNA:',
+    rnaExtractionContent: 'DNA was extracted from Soil Samples using Alexgen Soil DNA Kit. (Cat. No. 1008). DNA quantity was measured using Qubit® 4.0 fluorometer and DNA sample was amplified using 16s primer set and analyzed by gel electrophoresis.',
+    libraryPrepHeader: 'Preparation of library:',
+    libraryPrepContent: 'The V3-V4 (Product size ~459bp) region of 16s RNA gene was amplified using specific primers. PCR amplified product will be re-amplified using specific V3-F and V4-R primers with overhang adapter via PCR.\n\nV3-F =16S Amplicon PCR Forward Primer \nTCGTCGGCAGCGTCAGATGTGTATAAGAGACAGCCTACGGGNGGCWGCAG\n\nV4-R =16S Amplicon PCR Reverse Primer \nGTCTCGTGGGCTCGGAGATGTGTATAAGAGACAGGACTACHVGGGTATCTAATCC. \n\nAfterwards, PCR products were purified by using Ampure XP beads. The purified amplicons were subjected to index PCR using Nextera XT indices kit. The resulting indexed amplicons were purified using AmPure XP beads and checked on Agilent tapestation. Libraries were quantified using Qubit HS and qPCR mix pooled together for sequencing',
+    sequencingHeader: 'Cluster Generation and Sequencing:',
+    sequencingContent: 'The pooled PCR products (library) were loaded on sequencer for cluster generation by hybridization onto the oligonucleotide-coated surface of the flowcell. Immobilized DNA template copies were amplified by bridge amplification to generate clonal DNA clusters. Sequencing was performed using PE300 kit for sequencing of 16S sequencing on Miseq platform.',
+    qcDescriptionHeader: 'Quantity and quality check (QC) of library on Agilent Tape Station 4150:',
+    qcDescriptionContent: 'The amplified library analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer\'s instructions.',
+    conclusionHeader: 'Conclusions:',
+    conclusionContent: '- The library was prepared from the samples by using Nextera XT Indices kit.\n- The average size of library is 617bp.\n- The library was sequenced on Illumina Miseq platform (2 x 300 bp chemistry) to generate ~0.1 M reads /sample.'
   }
 ];
 
+// ─── File Classification Helpers ─────────────────────────────────────────────
+// These run on the CLIENT side (browser-uploaded files or path-string arrays
+// returned from the server scan API).  The same logic mirrors src/api.ts so
+// that behaviour is identical whether you are using the web tunnel or the
+// local desktop path browser.
+
+/** Returns the bare lowercase stem of a filename (no extension, no path). */
+function fileStem(name: string): string {
+  return name.split(/[/\\]/).pop()!.toLowerCase().replace(/\.(xlsx|xls|csv|png|jpg|jpeg)$/i, '');
+}
+
+/** Returns the bare lowercase basename WITH extension. */
+function fileBase(name: string): string {
+  return name.split(/[/\\]/).pop()!.toLowerCase();
+}
+
+/** True if the file looks like a qubit / quantification spreadsheet. */
+function isQubitFilename(name: string): boolean {
+  const stem = fileStem(name);
+  return stem === 'qubit' || stem.startsWith('qubit') || stem.includes('qubit') || stem.includes('quant');
+}
+
+/** True if the file looks like a lane-mapping spreadsheet. */
+function isLaneFilename(name: string): boolean {
+  const stem = fileStem(name);
+  return stem === 'lane' || stem.startsWith('lane') || stem.includes('lane');
+}
+
+/** Pick the best qubit file from an array of filenames.
+ *  Prefers an exact-named "qubit.*" file; falls back to any file whose stem
+ *  contains 'qubit' or 'quant'. */
+function pickQubitFile(files: string[]): string[] {
+  const exact = files.filter(f => fileStem(f) === 'qubit');
+  return exact.length > 0 ? exact : files.filter(isQubitFilename);
+}
+
+/** Pick the best lane-map file from an array of filenames. */
+function pickLaneFile(files: string[]): string[] {
+  const exact = files.filter(f => fileStem(f) === 'lane');
+  return exact.length > 0 ? exact : files.filter(isLaneFilename);
+}
+
+/** Classify an array of image path strings and return them in canonical order:
+ *  1. Agarose gel images  (A-Z)
+ *  2. TapeStation images   (A-Z)
+ *  3. Everything else      (A-Z)
+ */
+function classifyAndOrderImages(images: string[]): {
+  gel: string[];
+  tapestation: string[];
+  rnaQc: string[];
+  bioanalyzer: string[];
+  qubit: string[];
+  ordered: string[];
+} {
+  const byBase = (a: string, b: string) => fileBase(a).localeCompare(fileBase(b));
+  const sorted = [...images].sort(byBase);
+
+  const gel = sorted.length > 0 ? [sorted[0]] : [];
+  const tapestation = sorted.length > 1 ? sorted.slice(1) : [];
+
+  const rnaQc = images.filter(f => /rna.*qc|qc.*rna/i.test(fileBase(f)));
+  const bioanalyzer = images.filter(f => /bioanalyzer|rin|ladder/i.test(fileBase(f)));
+  const qubit = images.filter(f => /qubit|quant/i.test(fileBase(f)));
+
+  return { gel, tapestation, rnaQc, bioanalyzer, qubit, ordered: sorted };
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getImageLabel(src: string): string {
+  if (!src) return '';
+  if (src.startsWith('data:')) {
+    return `Uploaded Custom Image (${src.substring(0, 30)}...)`;
+  }
+  return src.split(/[/\\]/).pop() || src;
+}
+
 export default function App() {
+
   const tabsList = ['project', 'samples', 'static', 'qc', 'preview', 'export'] as const;
   type TabType = typeof tabsList[number];
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<TabType>('project');
@@ -146,21 +242,25 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   // Generation status tracking for visual feedback
-  const [generatingButton, setGeneratingButton] = useState<'interim' | 'comprehensive' | 'docx' | null>(null);
+  const [generatingButton, setGeneratingButton] = useState<'interim' | 'comprehensive' | 'interim_docx' | 'comprehensive_docx' | null>(null);
   const [generationSuccess, setGenerationSuccess] = useState<boolean>(false);
+  // Download links returned by the server when running via web/cloudflare tunnel
+  const [downloadableFiles, setDownloadableFiles] = useState<Array<{ path: string; size: number; downloadUrl: string | null }>>([]);
 
   // 1. Project Details
   const [projectId, setProjectId] = useState('');
-  const [clientName, setClientName] = useState('');
   const [submittedTo, setSubmittedTo] = useState('Dr. Amit Gupta');
+  const [refGenomeLink, setRefGenomeLink] = useState('https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/');
   const [institution, setInstitution] = useState('Unigenome Bioinformatics Lab');
   const [reportDate, setReportDate] = useState(new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
   const [serviceType, setServiceType] = useState('Transcriptome Sequencing');
   const [platform, setPlatform] = useState('Illumina Novaseq X Plus');
   const [readLength, setReadLength] = useState('2 X 150 PE');
   const [noOfSamples, setNoOfSamples] = useState('0');
+  const [noOfLibrariesPrepared, setNoOfLibrariesPrepared] = useState('0');
   const [dataOutput, setDataOutput] = useState('~06GB / Sample');
   const [sampleType, setSampleType] = useState('Leaf');
   const [shippingCondition, setShippingCondition] = useState('Dry Ice');
@@ -172,7 +272,7 @@ export default function App() {
 
   // 3. Static Content (using exact text from wet_lab_notes.txt)
   const [useStandardTemplate, setUseStandardTemplate] = useState(true);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<'kapa' | 'bacteria' | 'hmr'>('kapa');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<'kapa' | 'bacteria' | 'hmr' | '16s'>('kapa');
 
   const [rnaExtractionHeader, setRnaExtractionHeader] = useState('Isolation and Quantitative analysis of RNA:');
   const [rnaExtractionMethod, setRnaExtractionMethod] = useState(STATIC_TEMPLATES[0].rnaExtractionContent);
@@ -189,7 +289,7 @@ export default function App() {
   const [conclusionHeader, setConclusionHeader] = useState('Conclusions:');
   const [conclusionSection, setConclusionSection] = useState(STATIC_TEMPLATES[0].conclusionContent);
 
-  const applyTemplate = (tplId: 'kapa' | 'bacteria' | 'hmr') => {
+  const applyTemplate = (tplId: 'kapa' | 'bacteria' | 'hmr' | '16s') => {
     setSelectedTemplateId(tplId);
     const tpl = STATIC_TEMPLATES.find(t => t.id === tplId);
     if (tpl) {
@@ -203,6 +303,32 @@ export default function App() {
       setQcDescription(tpl.qcDescriptionContent);
       setConclusionHeader(tpl.conclusionHeader);
       setConclusionSection(tpl.conclusionContent);
+
+      if (tplId === '16s') {
+        setServiceType('16s V3-V4 Metagenome Sequencing & Analysis');
+        setPlatform('Illumina Miseq');
+        setReadLength('2 X 300 bp PE');
+        setDataOutput('~0.1 M reads / sample');
+        setSampleType('Soil');
+      } else if (tplId === 'kapa') {
+        setServiceType('Transcriptome Sequencing');
+        setPlatform('Illumina Novaseq 6000');
+        setReadLength('2 X 150 bp PE');
+        setDataOutput('~8-10GB / Sample');
+        setSampleType('Leaf');
+      } else if (tplId === 'bacteria') {
+        setServiceType('Transcriptome Sequencing');
+        setPlatform('Illumina Novaseq 6000');
+        setReadLength('2 X 150 bp PE');
+        setDataOutput('~06-08GB / Sample');
+        setSampleType('Bacteria');
+      } else if (tplId === 'hmr') {
+        setServiceType('Transcriptome Sequencing');
+        setPlatform('Illumina Novaseq X Plus');
+        setReadLength('2 X 150 bp PE');
+        setDataOutput('~08-09GB / Sample');
+        setSampleType('Tissue');
+      }
     }
   };
 
@@ -263,28 +389,32 @@ export default function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const [showMappingModal, setShowMappingModal] = useState(false);
+  const [mappingData, setMappingData] = useState<string[][]>([]);
+  const [mappingHeaders, setMappingHeaders] = useState<string[]>([]);
+  const [firstRowIsHeader, setFirstRowIsHeader] = useState(true);
+  const [sampleIdIndex, setSampleIdIndex] = useState<number>(-1);
+  const [concIndex, setConcIndex] = useState<number>(-1);
+  const [volIndex, setVolIndex] = useState<number>(-1);
+  const [yieldIndex, setYieldIndex] = useState<number>(-1);
+  const [remarksIndex, setRemarksIndex] = useState<number>(-1);
+
   const [isWebMode, setIsWebMode] = useState(false);
 
   useEffect(() => {
     const checkApi = async () => {
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        setIsWebMode(true);
-        return;
-      }
-      try {
-        const response = await fetch('/api/list-dirs?path=.');
-        const res = await response.json();
-        if (res && res.success) {
-          setIsWebMode(false);
-        } else {
-          setIsWebMode(true);
-        }
-      } catch (e) {
-        setIsWebMode(true);
-      }
+      setIsWebMode(false);
     };
     checkApi();
   }, []);
+
+  const availableImages = Array.from(new Set([
+    ...(scanResult?.imageFiles || []),
+    ...(detectedImages.gel || []),
+    ...(detectedImages.tapestation || []),
+    ...tapestationImages.map(img => img.src),
+    ...(selectedGelImage ? [selectedGelImage] : [])
+  ])).filter(Boolean);
 
   const resolveImageSrc = (src: string) => {
     if (!src) return '';
@@ -294,6 +424,96 @@ export default function App() {
     return `/api/file?path=${encodeURIComponent(src)}`;
   };
 
+  const prepareMapping = (rowsGrid: string[][]) => {
+    if (rowsGrid.length === 0) {
+      showToast('No data found to import', 'error');
+      return;
+    }
+    const cleanedGrid = rowsGrid.filter(row => row && row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== ''));
+    if (cleanedGrid.length === 0) {
+      showToast('No data rows found', 'error');
+      return;
+    }
+
+    const headers = firstRowIsHeader
+      ? cleanedGrid[0].map((h, i) => String(h || '').trim() || `Column ${i + 1}`)
+      : cleanedGrid[0].map((_, i) => `Column ${i + 1}`);
+
+    setMappingHeaders(headers);
+    setMappingData(cleanedGrid);
+
+    let sIdx = -1;
+    let cIdx = -1;
+    let vIdx = -1;
+    let yIdx = -1;
+    let rIdx = -1;
+
+    headers.forEach((h, idx) => {
+      const norm = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (['sample', 'sampleid', 'id', 'name', 'samplename', 'pool', 'poolid'].some(kw => norm.includes(kw))) {
+        if (sIdx === -1) sIdx = idx;
+      }
+      else if (['conc', 'concentration', 'ngul', 'qubit', 'quant', 'value'].some(kw => norm.includes(kw))) {
+        if (cIdx === -1) cIdx = idx;
+      }
+      else if (['vol', 'volume', 'ul'].some(kw => norm.includes(kw))) {
+        if (vIdx === -1) vIdx = idx;
+      }
+      else if (['yield', 'ug', 'yieldval'].some(kw => norm.includes(kw))) {
+        if (yIdx === -1) yIdx = idx;
+      }
+      else if (['remark', 'remarks', 'note', 'notes', 'comment', 'comments', 'qc'].some(kw => norm.includes(kw))) {
+        if (rIdx === -1) rIdx = idx;
+      }
+    });
+
+    if (sIdx === -1 && headers.length > 0) sIdx = 0;
+    if (cIdx === -1 && headers.length > 1) cIdx = 1;
+    if (vIdx === -1 && headers.length > 2) vIdx = 2;
+    if (yIdx === -1 && headers.length > 3) yIdx = 3;
+    if (rIdx === -1 && headers.length > 4) rIdx = 4;
+
+    setSampleIdIndex(sIdx);
+    setConcIndex(cIdx);
+    setVolIndex(vIdx);
+    setYieldIndex(yIdx);
+    setRemarksIndex(rIdx);
+
+    setShowMappingModal(true);
+  };
+
+  const confirmMapping = () => {
+    const dataRows = firstRowIsHeader ? mappingData.slice(1) : mappingData;
+
+    const parsed: QubitRow[] = dataRows.map((row) => {
+      const sample_id = sampleIdIndex !== -1 && row[sampleIdIndex] ? String(row[sampleIdIndex]).trim() : 'Unknown';
+      const conc = concIndex !== -1 && row[concIndex] ? String(row[concIndex]).trim() : '0';
+      const vol = volIndex !== -1 && row[volIndex] ? String(row[volIndex]).trim() : '0';
+      const yieldVal = yieldIndex !== -1 && row[yieldIndex] ? String(row[yieldIndex]).trim() : '0';
+      const remarks = remarksIndex !== -1 && row[remarksIndex] ? String(row[remarksIndex]).trim() : '';
+      const qc_status = parseFloat(conc) > 20 ? 'PASS' : parseFloat(conc) > 5 ? 'WARN' : 'FAIL';
+
+      return {
+        sample_id,
+        conc,
+        vol,
+        yield: yieldVal,
+        remarks,
+        qc_status
+      };
+    }).filter(r => r.sample_id && r.sample_id !== 'Unknown');
+
+    if (parsed.length > 0) {
+      setQubitData(parsed);
+      setLibrarySizes(parsed.map(() => 350));
+      showToast(`Successfully imported ${parsed.length} samples with custom mapping!`, 'success');
+      setShowMappingModal(false);
+      setShowPasteModal(false);
+    } else {
+      showToast('No valid samples could be imported with the current mapping', 'error');
+    }
+  };
+
   const parseQubitExcelClient = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -301,32 +521,8 @@ export default function App() {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rawRows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
-        
-        const parsed = rawRows.map((row) => {
-          const sample = pickColumn(row, ['Sample', 'Sample ID', 'Sample Name', 'sample', 'SampleID']) ?? '';
-          const conc = pickColumn(row, ['Concentration', 'Qubit', 'ng/ul', 'ng/uL', 'Value', 'conc']) ?? 'N/A';
-          const vol = pickColumn(row, ['Volume', 'vol', 'Vol']) ?? 'N/A';
-          const yieldVal = pickColumn(row, ['Yield', 'yield']) ?? 'N/A';
-          const remarks = pickColumn(row, ['Remarks', 'remarks', 'Note']) ?? '';
-
-          return {
-            sample_id: String(sample),
-            conc: String(conc),
-            vol: String(vol),
-            yield: String(yieldVal),
-            remarks: String(remarks),
-            qc_status: parseFloat(String(conc)) > 20 ? 'PASS' : parseFloat(String(conc)) > 5 ? 'WARN' : 'FAIL' as const
-          };
-        }).filter(r => r.sample_id);
-        
-        if (parsed.length > 0) {
-          setQubitData(parsed);
-          setLibrarySizes(parsed.map(() => 350));
-          showToast(`Parsed ${parsed.length} samples from Qubit Excel!`, 'success');
-        } else {
-          showToast('No samples found in Excel file', 'error');
-        }
+        const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
+        prepareMapping(rawRows);
       } catch (err: any) {
         showToast('Error parsing Excel: ' + err.message, 'error');
       }
@@ -342,13 +538,13 @@ export default function App() {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rawRows = XLSX.utils.sheet_to_json(sheet) as Record<string, unknown>[];
-        
+
         const parsedLanes: LaneRow[] = [];
         for (const row of rawRows) {
           const keys = Object.keys(row);
           const laneKeys = keys.filter(k => k.toLowerCase().includes('lane')).sort();
           const sampleKeys = keys.filter(k => k.toLowerCase().includes('sample') || k.toLowerCase().includes('name')).sort();
-          
+
           const pairsCount = Math.min(laneKeys.length, sampleKeys.length);
           for (let i = 0; i < pairsCount; i++) {
             const laneVal = row[laneKeys[i]];
@@ -361,14 +557,14 @@ export default function App() {
             }
           }
         }
-        
+
         parsedLanes.sort((a, b) => {
           const na = parseInt(a.lane, 10);
           const nb = parseInt(b.lane, 10);
           if (!isNaN(na) && !isNaN(nb)) return na - nb;
           return a.lane.localeCompare(b.lane);
         });
-        
+
         if (parsedLanes.length > 0) {
           setLanes(parsedLanes);
           showToast(`Parsed ${parsedLanes.length} lanes from mapping Excel!`, 'success');
@@ -407,13 +603,13 @@ export default function App() {
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
         imagePaths.push(dataUrl);
-        
+
         const sampleId = qubitData[idx]?.sample_id || `Sample_${idx + 1}`;
         newImages.push({
           sample_id: sampleId,
           src: dataUrl
         });
-        
+
         loadedCount++;
         if (loadedCount === fileArray.length) {
           setTapestationImages(prev => {
@@ -428,7 +624,7 @@ export default function App() {
             });
             return existing;
           });
-          
+
           setDetectedImages(prev => ({
             ...prev,
             tapestation: [...prev.tapestation.filter(x => !x.startsWith('data:')), ...imagePaths]
@@ -456,17 +652,16 @@ export default function App() {
 
   const initializeWebEmptyProject = () => {
     setProjectId('NGS-WEB-PROJECT');
-    setClientName('Web User');
     setSubmittedTo('Dr. Amit Gupta');
     setInstitution('Unigenome Web Lab');
     setReportDate(new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
-    
+
     setQubitData([
       { sample_id: 'S1', conc: '25.4', vol: '15', yield: '0.38', remarks: 'Good Quality', qc_status: 'PASS' },
       { sample_id: 'S2', conc: '18.1', vol: '15', yield: '0.27', remarks: 'Low Conc', qc_status: 'WARN' },
       { sample_id: 'S3', conc: '32.0', vol: '15', yield: '0.48', remarks: 'Good Quality', qc_status: 'PASS' }
     ]);
-    
+
     setLanes([
       { lane: '1', sample: 'S1' },
       { lane: '2', sample: 'S2' },
@@ -477,14 +672,13 @@ export default function App() {
       success: true,
       imageFiles: []
     });
-    
+
     showToast('Workspace initialized!', 'success');
   };
 
   const loadWebDemoData = () => {
     setProjectId('NGS-COMP-2026');
-    setClientName('Dr. Sarah Jenkins');
-    setSubmittedTo('Dr. Amit Gupta');
+    setSubmittedTo('Dr. Sarah Jenkins');
     setInstitution('Institute of Genomics & Biotech');
     setReportDate(new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
     setServiceType('Transcriptome Sequencing');
@@ -512,7 +706,7 @@ export default function App() {
 
     const mockGelSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="100%" height="100%" fill="%23111"/><text x="20" y="30" fill="%23fff" font-family="monospace" font-size="12">M  1  2  3  4  5</text><line x1="20" y1="50" x2="380" y2="50" stroke="%23333" stroke-width="2"/><line x1="25" y1="60" x2="35" y2="60" stroke="%2388f" stroke-width="4" opacity="0.8"/><line x1="55" y1="80" x2="65" y2="80" stroke="%238f8" stroke-width="6"/><line x1="85" y1="83" x2="95" y2="83" stroke="%238f8" stroke-width="6"/><line x1="115" y1="90" x2="125" y2="90" stroke="%238f8" stroke-width="4"/><line x1="145" y1="100" x2="155" y2="100" stroke="%238f8" stroke-width="4"/><line x1="175" y1="130" x2="185" y2="130" stroke="%23f88" stroke-width="2"/></svg>';
     const mockTS1 = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150" viewBox="0 0 300 150"><rect width="100%" height="100%" fill="%23fff" stroke="%23ccc"/><path d="M10 130 Q 80 130 150 50 T 290 130" fill="none" stroke="%231e3a8a" stroke-width="3"/><text x="110" y="30" fill="%231e3a8a" font-family="sans-serif" font-size="12" font-weight="bold">Peak: 450 bp</text></svg>';
-    
+
     setSelectedGelImage(mockGelSvg);
     setTapestationImages([
       { sample_id: 'WT_Rep1', src: mockTS1 },
@@ -554,8 +748,35 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    setNoOfSamples(String(qubitData.length));
-  }, [qubitData]);
+    // Auto-fill sample count from qubit data rows, but only if we actually have rows
+    if (qubitData.length > 0) {
+      setNoOfSamples(String(qubitData.length));
+      setNoOfLibrariesPrepared(String(qubitData.length));
+
+      // Automatically align tapestation images with qubitData sample IDs in sequence
+      setTapestationImages(prev => {
+        const hasExistingValid = prev.some(p => qubitData.some(q => q.sample_id === p.sample_id));
+        if (hasExistingValid) {
+          // Re-map to match the current qubitData order, preserving manual selections if they exist.
+          return qubitData.map((row, idx) => {
+            const existing = prev.find(p => p.sample_id === row.sample_id);
+            if (existing) return existing;
+            // Otherwise fallback to detected image at this index
+            const src = detectedImages.tapestation[idx] || '';
+            return { sample_id: row.sample_id, src };
+          });
+        }
+
+        if (detectedImages.tapestation && detectedImages.tapestation.length > 0) {
+          return qubitData.map((row, idx) => ({
+            sample_id: row.sample_id,
+            src: detectedImages.tapestation[idx] || ''
+          }));
+        }
+        return prev;
+      });
+    }
+  }, [qubitData, detectedImages.tapestation]);
 
   // HTML Folder Browser Modal states
   const [showFolderBrowser, setShowFolderBrowser] = useState(false);
@@ -583,10 +804,192 @@ export default function App() {
     }
   };
 
-  const handleBrowse = async () => {
-    const startPath = projectPath.trim() || '.';
-    setShowFolderBrowser(true);
-    await fetchDirs(startPath);
+  const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const res = reader.result as string;
+      const base64 = res.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+
+  const getFilesFromEntry = async (entry: any): Promise<File[]> => {
+    const files: File[] = [];
+    if (entry.isFile) {
+      const file = await new Promise<File>((resolve, reject) => entry.file(resolve, reject));
+      (file as any).customRelativePath = entry.fullPath.substring(1);
+      files.push(file);
+    } else if (entry.isDirectory) {
+      const dirReader = entry.createReader();
+      const readAllEntries = async (): Promise<any[]> => {
+        const allEntries: any[] = [];
+        const read = async () => {
+          const batch = await new Promise<any[]>((resolve, reject) => dirReader.readEntries(resolve, reject));
+          if (batch.length > 0) {
+            allEntries.push(...batch);
+            await read();
+          }
+        };
+        await read();
+        return allEntries;
+      };
+      const entries = await readAllEntries();
+      for (const childEntry of entries) {
+        const childFiles = await getFilesFromEntry(childEntry);
+        files.push(...childFiles);
+      }
+    }
+    return files;
+  };
+
+  const uploadAndProcessFiles = async (files: File[]) => {
+    setLoading(true);
+    try {
+      const ALLOWED_EXT = /\.(xlsx|xls|csv|png|jpg|jpeg|docx|txt|json)$/i;
+      const relevantFiles = files.filter(f => ALLOWED_EXT.test(f.name) && f.size < 15 * 1024 * 1024);
+
+      if (relevantFiles.length === 0) {
+        showToast('No relevant QC, Excel, or Notes files found in selected folder', 'error');
+        setLoading(false);
+        return;
+      }
+
+      const payloadFiles = await Promise.all(relevantFiles.map(async f => {
+        const content = await toBase64(f);
+        return {
+          name: f.name,
+          path: (f as any).customRelativePath || f.webkitRelativePath || f.name,
+          content
+        };
+      }));
+
+      const response = await fetch('/api/upload-project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: payloadFiles })
+      });
+      const res = await response.json();
+      if (res.success) {
+        setProjectPath(res.projectPath);
+        setScanResult(res.scanResult);
+        setLogoPath(res.scanResult.logoPath || '');
+        setUnipathLogoPath(res.scanResult.unipathLogoPath || '');
+
+        // Populate metadata
+        const data = res.scanResult.wetLabData.project_id ? res.scanResult.wetLabData : res.scanResult.metadata;
+        setProjectId(data.project_id || res.scanResult.metadata.project_id || 'Project');
+        setSubmittedTo(data.submitted_to || 'Dr. Amit Gupta');
+        setRefGenomeLink(data.ref_genome_link || res.scanResult.metadata.ref_genome_link || 'https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/');
+        setInstitution(data.client_org || res.scanResult.metadata.client_org || data.institution || 'Unigenome Bioinformatics Lab');
+        setReportDate(data.report_date || reportDate);
+        setServiceType(data.service_type || serviceType);
+        setPlatform(data.platform || platform);
+        setReadLength(data.read_length || readLength);
+        setDataOutput(data.data_throughput || dataOutput);
+        setSampleType(data.sample_type || 'Leaf');
+        setShippingCondition(data.shipping_condition || 'Dry Ice');
+
+        const resolvedSamplesVal = data.no_of_samples || String(data.sample_count || '0');
+        if (resolvedSamplesVal !== '0') {
+          setNoOfSamples(resolvedSamplesVal);
+        }
+        const resolvedLibsVal = data.no_of_libraries_prepared || data.no_of_samples || String(data.sample_count || '0');
+        if (resolvedLibsVal !== '0') {
+          setNoOfLibrariesPrepared(resolvedLibsVal);
+        }
+
+        // Auto-classify images using shared helper (gel first A-Z, then tape A-Z)
+        const allImages = res.scanResult.imageFiles || [];
+        const classified = classifyAndOrderImages(allImages);
+        setDetectedImages({
+          rnaQc: classified.rnaQc,
+          tapestation: classified.tapestation,
+          bioanalyzer: classified.bioanalyzer,
+          gel: classified.gel,
+          qubit: classified.qubit
+        });
+
+        // Parse Qubit — prefer exact-named qubit file from server, then client-side pick
+        const allExcel = res.scanResult.excelFiles || [];
+        const bestQubitFiles = res.scanResult.qubitFiles?.length > 0
+          ? res.scanResult.qubitFiles
+          : pickQubitFile(allExcel);
+        if (bestQubitFiles.length > 0) {
+          parseQubitExcel(bestQubitFiles[0]);
+        } else if (data.qubit_data && data.qubit_data.length > 0) {
+          setQubitData(data.qubit_data);
+        }
+
+        // Parse Lane Map — prefer exact-named lane file from server, then client-side pick
+        const bestLaneFiles = res.scanResult.laneMapFiles?.length > 0
+          ? res.scanResult.laneMapFiles
+          : pickLaneFile(allExcel);
+        if (data.lane_mapping && data.lane_mapping.rows && data.lane_mapping.rows.length > 0) {
+          const rows = data.lane_mapping.rows || [];
+          const flattedLanes: LaneRow[] = [];
+          rows.forEach((r: string[]) => { for (let i = 0; i < r.length; i += 2) { if (r[i]) flattedLanes.push({ lane: r[i], sample: r[i + 1] || '' }); } });
+          setLanes(flattedLanes);
+        } else if (bestLaneFiles.length > 0) {
+          parseLaneMapExcel(bestLaneFiles[0]);
+        }
+
+        // Auto Gel Image (first gel image, already A-Z sorted)
+        const serverGel = res.scanResult.gelImages;
+        if (serverGel && serverGel.length > 0) {
+          setSelectedGelImage(serverGel[0]);
+        } else if (classified.gel.length > 0) {
+          setSelectedGelImage(classified.gel[0]);
+        }
+
+        // TapeStation images (A-Z sorted)
+        if (data.tapestation_images) {
+          setTapestationImages(data.tapestation_images);
+        } else {
+          const tapeSrcs = (res.scanResult.tapestationImages && res.scanResult.tapestationImages.length > 0)
+            ? res.scanResult.tapestationImages
+            : classified.tapestation;
+          if (tapeSrcs.length > 0) {
+            const samples = data.samples || [];
+            setTapestationImages(tapeSrcs.map((src: string, i: number) => ({
+              sample_id: samples[i] || `Sample_${i + 1}`,
+              src
+            })));
+          }
+        }
+
+        showToast('Project folder uploaded and parsed successfully!', 'success');
+      } else {
+        showToast(res.error || 'Failed to upload folder', 'error');
+      }
+    } catch (err: any) {
+      showToast('Upload error: ' + err.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDirectorySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const ALLOWED_EXT = /\.(xlsx|xls|csv|png|jpg|jpeg|docx|txt|json)$/i;
+      const relevantFiles = files.filter(f => ALLOWED_EXT.test(f.name) && f.size < 15 * 1024 * 1024);
+
+      if (relevantFiles.length === 0) {
+        showToast('No relevant QC, Excel, or Notes files found in selected folder', 'error');
+        return;
+      }
+      setSelectedFiles(relevantFiles);
+      const firstFile = relevantFiles[0];
+      const pathPart = firstFile.webkitRelativePath || firstFile.name;
+      const folderName = pathPart.split(/[\\/]/)[0] || 'Selected Folder';
+      setProjectPath(folderName);
+    }
+  };
+
+  const handleBrowse = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSelectBrowserFolder = () => {
@@ -596,30 +999,35 @@ export default function App() {
   };
 
   const handleScan = async () => {
-    if (!projectPath.trim()) {
-      showToast('Please specify a project folder path', 'error');
-      return;
+    if (selectedFiles.length > 0) {
+      await uploadAndProcessFiles(selectedFiles);
+    } else {
+      if (!projectPath.trim()) {
+        showToast('Please specify a project folder path or select a folder first', 'error');
+        return;
+      }
+      await handleScanFromPath(projectPath.trim());
     }
-    await handleScanFromPath(projectPath.trim());
   };
 
   const handleScanFromPath = async (path: string) => {
     setLoading(true);
-    
+
     // Reset all project-specific states to default values before scanning new folder
     setProjectId('');
-    setClientName('');
     setSubmittedTo('Dr. Amit Gupta');
+    setRefGenomeLink('https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/');
     setInstitution('Unigenome Bioinformatics Lab');
     setReportDate(new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
     setServiceType('Transcriptome Sequencing');
     setPlatform('Illumina Novaseq X Plus');
     setReadLength('2 X 150 PE');
     setNoOfSamples('0');
+    setNoOfLibrariesPrepared('0');
     setDataOutput('~06GB / Sample');
     setSampleType('Leaf');
     setShippingCondition('Dry Ice');
-    
+
     setQubitData([]);
     setLanes([]);
     setSelectedGelImage('');
@@ -656,12 +1064,12 @@ export default function App() {
       // Populate metadata
       const data = res.wetLabData.project_id ? res.wetLabData : res.metadata;
       setProjectId(data.project_id || res.metadata.project_id || path.split(/[\\/]/).pop() || '');
-      setClientName(data.client_name || res.metadata.client_name || '');
       setSubmittedTo(data.submitted_to || 'Dr. Amit Gupta');
-      
+      setRefGenomeLink(data.ref_genome_link || res.metadata.ref_genome_link || 'https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/');
+
       // Fixed: Support client_org mapping to Institution form field
       setInstitution(data.client_org || res.metadata.client_org || data.institution || 'Unigenome Bioinformatics Lab');
-      
+
       setReportDate(data.report_date || reportDate);
       setServiceType(data.service_type || serviceType);
       setPlatform(data.platform || platform);
@@ -670,53 +1078,67 @@ export default function App() {
       setSampleType(data.sample_type || 'Leaf');
       setShippingCondition(data.shipping_condition || 'Dry Ice');
 
-      // Auto-classify all found images
-      const allImages = res.imageFiles || [];
-      const classified = {
-        rnaQc: allImages.filter((f: string) => /rna.*qc|qc.*rna/i.test(f)),
-        tapestation: allImages.filter((f: string) => /tapestation|tape|4150/i.test(f)),
-        bioanalyzer: allImages.filter((f: string) => /bioanalyzer|rin|ladder/i.test(f)),
-        gel: allImages.filter((f: string) => /gel|agarose/i.test(f)),
-        qubit: allImages.filter((f: string) => /qubit|quant/i.test(f))
-      };
-      setDetectedImages(classified);
+      const resolvedSamplesVal = data.no_of_samples || String(data.sample_count || '0');
+      if (resolvedSamplesVal !== '0') {
+        setNoOfSamples(resolvedSamplesVal);
+      }
+      const resolvedLibsVal = data.no_of_libraries_prepared || data.no_of_samples || String(data.sample_count || '0');
+      if (resolvedLibsVal !== '0') {
+        setNoOfLibrariesPrepared(resolvedLibsVal);
+      }
 
-      // Parse Qubit if present
-      if (res.qubitFiles && res.qubitFiles.length > 0) {
-        parseQubitExcel(res.qubitFiles[0]);
+      // Auto-classify all found images using shared helper (gel first A-Z, then tape A-Z)
+      const allImages = res.imageFiles || [];
+      const classified = classifyAndOrderImages(allImages);
+      setDetectedImages({
+        rnaQc: classified.rnaQc,
+        tapestation: classified.tapestation,
+        bioanalyzer: classified.bioanalyzer,
+        gel: classified.gel,
+        qubit: classified.qubit
+      });
+
+      // Parse Qubit — prefer exact-named qubit file, then client-side pick
+      const allExcel = res.excelFiles || [];
+      const bestQubitFiles = res.qubitFiles?.length > 0 ? res.qubitFiles : pickQubitFile(allExcel);
+      if (bestQubitFiles.length > 0) {
+        parseQubitExcel(bestQubitFiles[0]);
       } else if (data.qubit_data && data.qubit_data.length > 0) {
         setQubitData(data.qubit_data);
       }
 
-      // Parse gel mapping if present
-      if (res.laneMapFiles && res.laneMapFiles.length > 0) {
-        parseLaneMapExcel(res.laneMapFiles[0]);
+      // Parse Lane Map — prefer exact-named lane file, then client-side pick
+      const bestLaneFiles = res.laneMapFiles?.length > 0 ? res.laneMapFiles : pickLaneFile(allExcel);
+      if (data.lane_mapping && data.lane_mapping.rows && data.lane_mapping.rows.length > 0) {
+        const rows = data.lane_mapping.rows || [];
+        const flattedLanes: LaneRow[] = [];
+        rows.forEach((r: string[]) => { for (let i = 0; i < r.length; i += 2) { if (r[i]) flattedLanes.push({ lane: r[i], sample: r[i + 1] || '' }); } });
+        setLanes(flattedLanes);
+      } else if (bestLaneFiles.length > 0) {
+        parseLaneMapExcel(bestLaneFiles[0]);
       }
 
-      // Auto Gel Image
+      // Auto Gel Image (first gel image, already A-Z sorted)
       if (res.gelImages && res.gelImages.length > 0) {
         setSelectedGelImage(res.gelImages[0]);
       } else if (classified.gel.length > 0) {
         setSelectedGelImage(classified.gel[0]);
       }
 
-      // TapeStation assignments
+      // TapeStation images (A-Z sorted)
       if (data.tapestation_images) {
         setTapestationImages(data.tapestation_images);
-      } else if (res.tapestationImages) {
-        const samples = data.samples || [];
-        const matched = res.tapestationImages.map((src: string, i: number) => ({
-          sample_id: samples[i] || `Sample_${i + 1}`,
-          src
-        }));
-        setTapestationImages(matched);
-      } else if (classified.tapestation.length > 0) {
-        const samples = data.samples || [];
-        const matched = classified.tapestation.map((src: string, i: number) => ({
-          sample_id: samples[i] || `Sample_${i + 1}`,
-          src
-        }));
-        setTapestationImages(matched);
+      } else {
+        const tapeSrcs = (res.tapestationImages && res.tapestationImages.length > 0)
+          ? res.tapestationImages
+          : classified.tapestation;
+        if (tapeSrcs.length > 0) {
+          const samples = data.samples || [];
+          setTapestationImages(tapeSrcs.map((src: string, i: number) => ({
+            sample_id: samples[i] || `Sample_${i + 1}`,
+            src
+          })));
+        }
       }
 
       // Load static content values from wetLabData if available
@@ -793,24 +1215,33 @@ export default function App() {
     setDragOver(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    
-    // Attempt folder path discovery
+
     const items = e.dataTransfer.items;
     if (items && items.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        const path = (file as any).path || file.name;
-        if (path) {
-          showToast('Project folder dropped! Loading...', 'info');
-          if (projectPath) {
-            handleScanFromPath(projectPath);
-          } else {
-            handleScan();
-          }
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const entry = items[i].webkitGetAsEntry();
+        if (entry) {
+          const entryFiles = await getFilesFromEntry(entry);
+          files.push(...entryFiles);
         }
+      }
+      if (files.length > 0) {
+        const ALLOWED_EXT = /\.(xlsx|xls|csv|png|jpg|jpeg|docx|txt|json)$/i;
+        const relevantFiles = files.filter(f => ALLOWED_EXT.test(f.name) && f.size < 15 * 1024 * 1024);
+
+        if (relevantFiles.length === 0) {
+          showToast('No relevant QC, Excel, or Notes files found in selected folder', 'error');
+          return;
+        }
+        setSelectedFiles(relevantFiles);
+        const firstFile = relevantFiles[0];
+        const pathPart = (firstFile as any).customRelativePath || firstFile.webkitRelativePath || firstFile.name;
+        const folderName = pathPart.split(/[\\/]/)[0] || 'Selected Folder';
+        setProjectPath(folderName);
       }
     }
   };
@@ -825,23 +1256,25 @@ export default function App() {
     setQubitData(qubitData.filter((_, i) => i !== index));
   };
 
+  const handleAddLaneRow = () => {
+    setLanes([...lanes, { lane: String(lanes.length + 1), sample: '' }]);
+  };
+
+  const handleUpdateLaneRow = (idx: number, field: keyof LaneRow, value: string) => {
+    const updated = [...lanes];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setLanes(updated);
+  };
+
+  const handleRemoveLaneRow = (idx: number) => {
+    setLanes(lanes.filter((_, i) => i !== idx));
+  };
+
   const handleExcelPaste = () => {
     if (!excelPasteText.trim()) return;
-    const rows = excelPasteText.trim().split('\n');
-    const parsed: QubitRow[] = rows.map((line) => {
-      const cols = line.split('\t');
-      const sample_id = cols[0] || 'Unknown';
-      const conc = cols[1] || '0';
-      const vol = cols[2] || '0';
-      const yieldVal = cols[3] || '0';
-      const remarks = cols[4] || '';
-      const qc_status = parseFloat(conc) > 20 ? 'PASS' : parseFloat(conc) > 5 ? 'WARN' : 'FAIL';
-      return { sample_id, conc, vol, yield: yieldVal, remarks, qc_status };
-    });
-    setQubitData(parsed);
-    setShowPasteModal(false);
-    setExcelPasteText('');
-    showToast(`Successfully pasted ${parsed.length} rows from Excel!`, 'success');
+    const lines = excelPasteText.trim().split('\n');
+    const grid = lines.map(line => line.split('\t').map(cell => cell.trim()));
+    prepareMapping(grid);
   };
 
   // CSV Import / Export
@@ -852,19 +1285,10 @@ export default function App() {
     reader.onload = (event) => {
       const text = event.target?.result as string;
       const lines = text.split('\n').filter(Boolean);
-      const parsed: QubitRow[] = lines.slice(1).map((line) => {
-        const cols = line.split(',');
-        const sample_id = cols[0]?.replace(/"/g, '') || 'Unknown';
-        const conc = cols[1]?.replace(/"/g, '') || '0';
-        const vol = cols[2]?.replace(/"/g, '') || '0';
-        const yieldVal = cols[3]?.replace(/"/g, '') || '0';
-        const remarks = cols[4]?.replace(/"/g, '') || '';
-        const statusVal = cols[5]?.replace(/"/g, '').trim() as any;
-        const qc_status = ['PASS', 'WARN', 'FAIL'].includes(statusVal) ? statusVal : 'PASS';
-        return { sample_id, conc, vol, yield: yieldVal, remarks, qc_status };
+      const grid = lines.map(line => {
+        return line.split(',').map(cell => cell.replace(/^["']|["']$/g, '').trim());
       });
-      setQubitData(parsed);
-      showToast(`Imported ${parsed.length} samples from CSV`, 'success');
+      prepareMapping(grid);
     };
     reader.readAsText(file);
   };
@@ -935,26 +1359,31 @@ export default function App() {
   };
 
   // Compile full report payload and call generator
-  const triggerGenerate = async (type: 'interim' | 'comprehensive' | 'docx', format: 'pdf' | 'docx' | 'html') => {
+  const triggerGenerate = async (type: 'interim' | 'comprehensive', format: 'pdf' | 'docx' | 'html') => {
     if (!projectPath) {
       showToast('Please scan or select a project directory first', 'error');
       return;
     }
 
-    setGeneratingButton(type);
+    const buttonKey = format === 'docx'
+      ? (type === 'interim' ? 'interim_docx' : 'comprehensive_docx')
+      : type;
+    setGeneratingButton(buttonKey);
     setGenerationSuccess(false);
 
     try {
       const payload = {
         project_id: projectId,
         report_date: reportDate,
-        client_name: clientName,
+        client_name: submittedTo,
         submitted_to: submittedTo,
+        ref_genome_link: refGenomeLink,
         client_org: institution, // Maps to client_org in EJS and parsed json backend
         service_type: serviceType,
         platform: platform,
         read_length: readLength,
         no_of_samples: noOfSamples,
+        no_of_libraries_prepared: noOfLibrariesPrepared,
         data_throughput: dataOutput,
         sample_type: sampleType,
         shipping_condition: shippingCondition,
@@ -1008,16 +1437,28 @@ export default function App() {
         body: JSON.stringify({
           projectPath,
           wetLabData: payload,
-          reportType: finalType
+          reportType: finalType,
+          formats: format === 'docx' ? ['docx'] : ['html', 'pdf']
         })
       });
       const res = await response.json();
       if (res.success) {
         setGenerationSuccess(true);
-        showToast(`Successfully generated report in deliverables directory!`, 'success');
+        // Store downloadable file links for web-upload mode
+        if (res.isWebUpload && res.files) {
+          setDownloadableFiles(res.files);
+        } else {
+          setDownloadableFiles([]);
+        }
+        if (!res.isWebUpload) {
+          showToast(`Successfully generated report in deliverables directory!`, 'success');
+        } else {
+          showToast(`Report ready — click the download buttons below!`, 'success');
+        }
         setTimeout(() => {
           setGenerationSuccess(false);
           setGeneratingButton(null);
+          // Keep downloadableFiles visible so user can still download
         }, 3000);
       } else {
         showToast(res.error || 'Generation failed', 'error');
@@ -1027,6 +1468,62 @@ export default function App() {
       showToast('Network error during generation: ' + e.message, 'error');
       setGeneratingButton(null);
     }
+  };
+
+  const downloadWetLabJson = () => {
+    const payload = {
+      project_id: projectId,
+      report_date: reportDate,
+      client_name: submittedTo,
+      submitted_to: submittedTo,
+      ref_genome_link: refGenomeLink,
+      client_org: institution,
+      service_type: serviceType,
+      platform: platform,
+      read_length: readLength,
+      no_of_samples: noOfSamples,
+      no_of_libraries_prepared: noOfLibrariesPrepared,
+      data_throughput: dataOutput,
+      sample_type: sampleType,
+      shipping_condition: shippingCondition,
+      samples: qubitData.map(r => r.sample_id),
+      qubit_data: qubitData,
+      library_sizes: librarySizes.length ? librarySizes : qubitData.map(() => 350),
+      gel_image_src: selectedGelImage,
+      lane_mapping: {
+        headers: ['Lane id', 'Sample name', 'Lane id', 'Sample name', 'Lane id', 'Sample name'],
+        rows: Array.from({ length: Math.ceil(lanes.length / 3) }).map((_, rIdx) => {
+          const row: string[] = [];
+          for (let i = 0; i < 3; i++) {
+            const item = lanes[rIdx * 3 + i];
+            row.push(item ? item.lane : '');
+            row.push(item ? item.sample : '');
+          }
+          return row;
+        })
+      },
+      tapestation_images: tapestationImages,
+      rna_isolation_qc: rnaExtractionMethod,
+      rna_isolation_qc_header: rnaExtractionHeader,
+      library_preparation: libraryPrepMethod,
+      library_preparation_header: libraryPrepHeader,
+      cluster_generation: sequencingMethod,
+      cluster_generation_header: sequencingHeader,
+      library_qc: qcDescription,
+      library_qc_header: qcDescriptionHeader,
+      conclusions: [conclusionSection],
+      conclusions_header: conclusionHeader,
+      selected_template_id: selectedTemplateId,
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${projectId || 'project'}_wet_lab_data.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    showToast('Downloaded wet_lab_data.json successfully!', 'success');
   };
 
   const handleTemplateToggle = (checked: boolean) => {
@@ -1093,14 +1590,14 @@ export default function App() {
             <div class="subtitle">${serviceType}</div>
             
             <div style="margin-top: 80px; font-size: 14px; line-height: 1.8;">
-              <div><strong>Client Name:</strong> ${clientName || 'N/A'}</div>
+              <div><strong>Submitted To:</strong> ${submittedTo || 'N/A'}</div>
               <div><strong>Institution:</strong> ${institution || 'N/A'}</div>
               <div><strong>Date:</strong> ${reportDate}</div>
               <div><strong>Platform:</strong> ${platform}</div>
             </div>
 
             <div style="margin-top: 120px; font-size: 12px; color: #64748b;">
-              Submitted To: ${submittedTo}
+              Submitted by: Unigenome Biotech
             </div>
           </div>
         `;
@@ -1109,12 +1606,13 @@ export default function App() {
           <h2>1. Project Specifications</h2>
           <table style="margin-top: 24px;">
             <tr><td><strong>Project ID</strong></td><td>${projectId || 'N/A'}</td></tr>
-            <tr><td><strong>Client Name</strong></td><td>${clientName || 'N/A'}</td></tr>
+            <tr><td><strong>Submitted To</strong></td><td>${submittedTo || 'N/A'}</td></tr>
             <tr><td><strong>Institution</strong></td><td>${institution || 'N/A'}</td></tr>
             <tr><td><strong>Service Type</strong></td><td>${serviceType}</td></tr>
             <tr><td><strong>Platform</strong></td><td>${platform}</td></tr>
             <tr><td><strong>Read Length</strong></td><td>${readLength}</td></tr>
             <tr><td><strong>No. of Samples</strong></td><td>${noOfSamples}</td></tr>
+            <tr><td><strong>No. of Libraries Prepared</strong></td><td>${noOfLibrariesPrepared}</td></tr>
             <tr><td><strong>Data output target</strong></td><td>${dataOutput}</td></tr>
             <tr><td><strong>Sample Type</strong></td><td>${sampleType}</td></tr>
             <tr><td><strong>Shipping Condition</strong></td><td>${shippingCondition}</td></tr>
@@ -1163,12 +1661,37 @@ export default function App() {
           <h2>3. Agarose Gel Analysis</h2>
           <p style="font-size: 12px;">Total RNA integrity was resolved on a 1% agarose gel for assessment of 28S/18S ribosomal RNA bands.</p>
           <div style="border: 1px dashed #cbd5e1; height: 320px; display: flex; align-items: center; justify-content: center; background: #f8fafc; margin: 20px 0; border-radius: 8px;">
-            ${selectedGelImage ? 
-              `<img src="${resolveImageSrc(selectedGelImage)}" style="max-height: 100%; max-width: 100%; object-fit: contain;"/>` : 
-              `<span style="color: #94a3b8; font-size: 12px;">[ Agarose Gel QC Image Not Loaded ]</span>`
-            }
+            ${selectedGelImage ?
+            `<img src="${resolveImageSrc(selectedGelImage)}" style="max-height: 100%; max-width: 100%; object-fit: contain;"/>` :
+            `<span style="color: #94a3b8; font-size: 12px;">[ Agarose Gel QC Image Not Loaded ]</span>`
+          }
           </div>
-          <div style="font-size: 11px; text-align: center; font-style: italic; color: #64748b;">Figure 3.1: 1% Agarose Gel profile of experimental RNA samples.</div>
+          <div style="font-size: 11px; text-align: center; font-style: italic; color: #64748b; margin-bottom: 20px;">Figure 3.1: 1% Agarose Gel profile of experimental RNA samples.</div>
+          ${lanes && lanes.length > 0 ? `
+          <div style="margin-top: 20px; overflow-x: auto;">
+            <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px; color: #1e3a8a;">Lane ID to Sample Name Mapping</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead>
+                <tr>
+                  <th>Lane id</th><th>Sample name</th>
+                  <th>Lane id</th><th>Sample name</th>
+                  <th>Lane id</th><th>Sample name</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Array.from({ length: Math.ceil(lanes.length / 3) }).map((_, rIdx) => {
+            let rowHtml = '<tr>';
+            for (let i = 0; i < 3; i++) {
+              const item = lanes[rIdx * 3 + i];
+              rowHtml += `<td>${item ? item.lane : ''}</td><td>${item ? item.sample : ''}</td>`;
+            }
+            rowHtml += '</tr>';
+            return rowHtml;
+          }).join('')}
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
         `;
       } else if (page.type === 'tapestation') {
         html += `
@@ -1232,20 +1755,19 @@ export default function App() {
   if (!scanResult) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans antialiased text-slate-800 animate-in fade-in duration-300">
-        
+
         {toast && (
           <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
-            <div className={`px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold flex items-center gap-2 ${
-              toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-              toast.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
-              'bg-sky-50 border-sky-200 text-sky-800'
-            }`}>
+            <div className={`px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold flex items-center gap-2 ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                toast.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+                  'bg-sky-50 border-sky-200 text-sky-800'
+              }`}>
               <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
               <span>{toast.text}</span>
             </div>
           </div>
         )}
- 
+
         <div className="max-w-xl w-full bg-white border border-slate-200 rounded-2xl shadow-xl p-8 space-y-6 transform hover:scale-[1.01] transition-transform duration-300">
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-xl bg-sky-600 flex items-center justify-center text-white font-extrabold text-xl mx-auto shadow-sm">
@@ -1261,7 +1783,7 @@ export default function App() {
               <p className="text-xs text-slate-400">Select a project deliverables folder containing raw QC and quantification files.</p>
             )}
           </div>
- 
+
           {isWebMode ? (
             <div className="space-y-4 pt-2">
               <div className="border border-slate-100 bg-slate-50/50 rounded-xl p-4 text-center space-y-3">
@@ -1283,7 +1805,7 @@ export default function App() {
                   </button>
                 </div>
               </div>
- 
+
               <div className="border-t border-slate-100 pt-4">
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Or Upload Qubit Excel Sheet</label>
                 <label className="border border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition">
@@ -1310,18 +1832,60 @@ export default function App() {
             <>
               {/* Large Drop Zone */}
               <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center transition cursor-pointer ${
-                  dragOver ? 'border-sky-500 bg-sky-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/50'
-                }`}
+                className={`relative border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition text-center min-h-[16rem] ${dragOver ? 'border-sky-500 bg-sky-50/50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70'
+                  } ${loading ? 'opacity-50 pointer-events-none' : ''}`}
               >
-                <svg className="w-10 h-10 text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-                <span className="text-xs font-bold text-slate-700">Drop QC Image Folder Here</span>
-                <span className="text-[10px] text-slate-400 mt-1">Recursively scans subfolders</span>
+                <input
+                  type="file"
+                  webkitdirectory="true"
+                  directory="true"
+                  multiple
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  ref={fileInputRef}
+                  onChange={handleDirectorySelect}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  disabled={loading}
+                  title=""
+                />
+
+                {selectedFiles.length > 0 ? (
+                  <div className="space-y-3 pointer-events-none">
+                    <svg className="w-12 h-12 text-emerald-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 01-18 0z" />
+                    </svg>
+                    <span className="block text-sm font-bold text-slate-800">Folder Selected Successfully</span>
+                    <span className="block text-xs text-slate-500 font-mono bg-slate-100 border border-slate-200 px-2 py-1.5 rounded-lg inline-block">
+                      {projectPath}
+                    </span>
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                      {selectedFiles.length} files matched ({selectedFiles.filter(f => f.name.endsWith('.xlsx') || f.name.endsWith('.xls')).length} spreadsheets, {selectedFiles.filter(f => f.name.match(/\.(png|jpg|jpeg)$/i)).length} images)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setSelectedFiles([]);
+                        setProjectPath('');
+                      }}
+                      className="pointer-events-auto text-xs text-red-500 hover:text-red-700 font-bold hover:underline"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pointer-events-none">
+                    <svg className="w-12 h-12 text-sky-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <span className="block text-sm font-bold text-slate-800">Drag & Drop Project Folder Here or Click to Browse</span>
+                    <span className="block text-xs text-slate-400">Select the deliverables folder containing raw QC and quantification files</span>
+                  </div>
+                )}
               </div>
- 
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Or Paste Path Manually</label>
@@ -1329,22 +1893,26 @@ export default function App() {
                     <input
                       type="text"
                       placeholder="e.g. C:\Users\Lab\Deliverables_260046"
-                      value={projectPath}
+                      value={selectedFiles.length > 0 ? '' : projectPath}
+                      disabled={selectedFiles.length > 0 || loading}
                       onChange={(e) => setProjectPath(e.target.value)}
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-sky-500"
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-sky-500 disabled:opacity-50"
                     />
                     <button
+                      type="button"
                       onClick={handleBrowse}
-                      className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0"
+                      disabled={loading}
+                      className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition-all shrink-0 disabled:opacity-50"
                     >
                       Browse Folder
                     </button>
                   </div>
                 </div>
- 
+
                 <button
+                  type="button"
                   onClick={handleScan}
-                  disabled={loading}
+                  disabled={loading || (!projectPath.trim() && selectedFiles.length === 0)}
                   className="w-full bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white font-bold py-2.5 rounded-lg text-xs transition-all shadow-sm flex items-center justify-center gap-2"
                 >
                   {loading ? (
@@ -1353,9 +1921,9 @@ export default function App() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Scanning & Auto-Mapping...
+                      {selectedFiles.length > 0 ? 'Uploading & Processing Folder...' : 'Scanning & Auto-Mapping...'}
                     </>
-                  ) : 'Initialize Workspace'}
+                  ) : selectedFiles.length > 0 ? 'Upload & Initialize Workspace' : 'Initialize Workspace'}
                 </button>
               </div>
             </>
@@ -1368,15 +1936,14 @@ export default function App() {
   // Dashboard Active State
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800 h-screen overflow-hidden">
-      
+
       {/* Toast Notification */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
-          <div className={`px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold flex items-center gap-2 ${
-            toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-            toast.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
-            'bg-sky-50 border-sky-200 text-sky-800'
-          }`}>
+          <div className={`px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold flex items-center gap-2 ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+              toast.type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+                'bg-sky-50 border-sky-200 text-sky-800'
+            }`}>
             <span className="w-2.5 h-2.5 rounded-full bg-current"></span>
             <span>{toast.text}</span>
           </div>
@@ -1385,11 +1952,10 @@ export default function App() {
 
       {/* Main Workspace Frame */}
       <div className="flex flex-1 overflow-hidden">
-        
+
         {/* Left Sidebar */}
-        <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 transform transition-transform duration-300 md:translate-x-0 md:static ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
+        <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 transform transition-transform duration-300 md:translate-x-0 md:static ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}>
           <div className="p-6 border-b border-slate-100 flex items-center justify-between relative">
             <div className="flex items-center justify-center w-full">
               <img
@@ -1433,11 +1999,10 @@ export default function App() {
                     setActiveTab(tab);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-semibold transition-all border-l-4 ${
-                    activeTab === tab
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-xs font-semibold transition-all border-l-4 ${activeTab === tab
                       ? 'bg-slate-100 text-[#1A365D] border-[#1A365D] font-bold'
                       : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   {icons[tab]}
                   {labels[tab]}
@@ -1469,7 +2034,7 @@ export default function App() {
 
         {/* Dashboard Panels */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
-          
+
           {/* Header */}
           <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
@@ -1511,7 +2076,7 @@ export default function App() {
           </header>
 
           <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full pb-24 space-y-6">
-            
+
             {/* TAB 1: Project details */}
             {activeTab === 'project' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -1528,20 +2093,20 @@ export default function App() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Client Name</label>
-                      <input
-                        type="text"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                      />
-                    </div>
-                    <div>
                       <label className="block text-xs font-bold text-slate-500 mb-1">Submitted To</label>
                       <input
                         type="text"
                         value={submittedTo}
                         onChange={(e) => setSubmittedTo(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Reference Genome Link</label>
+                      <input
+                        type="text"
+                        value={refGenomeLink}
+                        onChange={(e) => setRefGenomeLink(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                       />
                     </div>
@@ -1596,6 +2161,15 @@ export default function App() {
                         type="text"
                         value={noOfSamples}
                         onChange={(e) => setNoOfSamples(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Number of Libraries Prepared</label>
+                      <input
+                        type="text"
+                        value={noOfLibrariesPrepared}
+                        onChange={(e) => setNoOfLibrariesPrepared(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                       />
                     </div>
@@ -1842,11 +2416,10 @@ export default function App() {
                                   copy[idx].qc_status = e.target.value as any;
                                   setQubitData(copy);
                                 }}
-                                className={`rounded text-xs font-semibold px-2 py-0.5 border ${
-                                  row.qc_status === 'PASS' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
-                                  row.qc_status === 'WARN' ? 'bg-amber-50 border-amber-200 text-amber-700' :
-                                  'bg-rose-50 border-rose-200 text-rose-700'
-                                }`}
+                                className={`rounded text-xs font-semibold px-2 py-0.5 border ${row.qc_status === 'PASS' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                    row.qc_status === 'WARN' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                      'bg-rose-50 border-rose-200 text-rose-700'
+                                  }`}
                               >
                                 <option value="PASS">PASS</option>
                                 <option value="WARN">WARN</option>
@@ -1878,7 +2451,7 @@ export default function App() {
             {activeTab === 'static' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                  
+
                   {/* Top Bar Header */}
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
                     <div>
@@ -1889,54 +2462,121 @@ export default function App() {
                       <span className="text-xs font-bold text-slate-600">Lock to Template Defaults</span>
                       <button
                         onClick={() => handleTemplateToggle(!useStandardTemplate)}
-                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none ${
-                          useStandardTemplate ? 'bg-sky-600' : 'bg-slate-300'
-                        }`}
+                        className={`w-12 h-6 rounded-full p-1 transition-colors duration-200 focus:outline-none ${useStandardTemplate ? 'bg-sky-600' : 'bg-slate-300'
+                          }`}
                       >
                         <div
-                          className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                            useStandardTemplate ? 'translate-x-6' : 'translate-x-0'
-                          }`}
+                          className={`w-4 h-4 rounded-full bg-white transition-transform duration-200 ${useStandardTemplate ? 'translate-x-6' : 'translate-x-0'
+                            }`}
                         />
                       </button>
                     </div>
                   </div>
 
                   {/* Template Selection Grid */}
-                  <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-5">
-                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Select Baseline RNA-Seq Template</h3>
-                    <p className="text-[10px] text-slate-400 mb-4">Select a standard prep template to populate defaults. Unlock the fields above to edit the headings or text paragraphs.</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {STATIC_TEMPLATES.map((tpl) => (
-                        <button
-                          key={tpl.id}
-                          type="button"
-                          onClick={() => applyTemplate(tpl.id as 'kapa' | 'bacteria' | 'hmr')}
-                          className={`flex flex-col text-left p-4 rounded-xl border transition-all duration-200 ${
-                            selectedTemplateId === tpl.id
-                              ? 'bg-sky-50 border-sky-500 ring-2 ring-sky-500/10'
-                              : 'bg-white border-slate-200 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center w-full mb-1.5">
-                            <span className="text-xs font-bold text-slate-800">{tpl.name}</span>
-                            {selectedTemplateId === tpl.id && (
-                              <span className="w-2 h-2 rounded-full bg-sky-600"></span>
-                            )}
-                          </div>
-                          <p className="text-[10px] text-slate-500 leading-normal mb-3">{tpl.description}</p>
-                          <div className="mt-auto border-t border-slate-100 pt-2.5 text-[9px] text-slate-400">
-                            <strong className="text-slate-600">Kit/Method difference:</strong> {tpl.diffExplanation}
-                          </div>
-                        </button>
-                      ))}
+                  <div className="mb-6 bg-slate-50/50 border border-slate-200/80 rounded-2xl p-6 shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200/60 pb-4 mb-5">
+                      <div>
+                        <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest">Baseline Template Configurations</h3>
+                        <p className="text-[10.5px] text-slate-400 mt-1">Select a workflow standard below to auto-populate report sections.</p>
+                      </div>
+                      <div className="mt-2 md:mt-0 flex gap-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold bg-sky-50 text-sky-700 border border-sky-100">
+                          {STATIC_TEMPLATES.length} Protocols Available
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* RNA-SEQ SECTION */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">🧬 RNA-Seq Workflows</span>
+                          <div className="h-[1px] flex-1 bg-slate-200/60"></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {STATIC_TEMPLATES.filter(t => t.id !== '16s').map((tpl) => (
+                            <button
+                              key={tpl.id}
+                              type="button"
+                              onClick={() => applyTemplate(tpl.id as 'kapa' | 'bacteria' | 'hmr' | '16s')}
+                              className={`group flex flex-col text-left p-4 rounded-xl border transition-all duration-200 relative overflow-hidden ${selectedTemplateId === tpl.id
+                                  ? 'bg-sky-50/60 border-sky-500 shadow-sm ring-1 ring-sky-500'
+                                  : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
+                                }`}
+                            >
+                              {selectedTemplateId === tpl.id && (
+                                <div className="absolute top-0 right-0 w-8 h-8 bg-sky-500 text-white rounded-bl-xl flex items-center justify-center text-[10px] font-bold">
+                                  ✓
+                                </div>
+                              )}
+                              <div className="flex flex-col mb-2 pr-4">
+                                <span className={`text-xs font-bold transition-colors ${selectedTemplateId === tpl.id ? 'text-sky-900' : 'text-slate-800'}`}>
+                                  {tpl.name}
+                                </span>
+                                <span className="inline-block w-max mt-1 px-1.5 py-0.5 rounded bg-sky-100/60 text-sky-700 font-semibold text-[8px] uppercase tracking-wide">
+                                  RNA-Seq
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-400 leading-relaxed mb-4 flex-1">
+                                {tpl.description}
+                              </p>
+                              <div className="border-t border-slate-100/80 pt-3 text-[9px] text-slate-400">
+                                <span className="font-bold text-slate-500 block mb-0.5">Kit & Sequencing Specifics:</span>
+                                {tpl.diffExplanation}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 16S METAGENOME SECTION */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">🔬 Metagenome Workflows</span>
+                          <div className="h-[1px] flex-1 bg-slate-200/60"></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {STATIC_TEMPLATES.filter(t => t.id === '16s').map((tpl) => (
+                            <button
+                              key={tpl.id}
+                              type="button"
+                              onClick={() => applyTemplate(tpl.id as 'kapa' | 'bacteria' | 'hmr' | '16s')}
+                              className={`group flex flex-col text-left p-4 rounded-xl border transition-all duration-200 relative overflow-hidden ${selectedTemplateId === tpl.id
+                                  ? 'bg-amber-50/60 border-amber-500 shadow-sm ring-1 ring-amber-500'
+                                  : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-xs'
+                                }`}
+                            >
+                              {selectedTemplateId === tpl.id && (
+                                <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500 text-white rounded-bl-xl flex items-center justify-center text-[10px] font-bold">
+                                  ✓
+                                </div>
+                              )}
+                              <div className="flex flex-col mb-2 pr-4">
+                                <span className={`text-xs font-bold transition-colors ${selectedTemplateId === tpl.id ? 'text-amber-900' : 'text-slate-800'}`}>
+                                  {tpl.name}
+                                </span>
+                                <span className="inline-block w-max mt-1 px-1.5 py-0.5 rounded bg-amber-100/60 text-amber-700 font-semibold text-[8px] uppercase tracking-wide">
+                                  16S Metagenome
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-400 leading-relaxed mb-4 flex-1">
+                                {tpl.description}
+                              </p>
+                              <div className="border-t border-slate-100/80 pt-3 text-[9px] text-slate-400">
+                                <span className="font-bold text-slate-500 block mb-0.5">Kit & Sequencing Specifics:</span>
+                                {tpl.diffExplanation}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Dynamic Editable Forms */}
                   <div className="space-y-5">
-                    
+
                     {/* Section 1: Extraction & Quantification */}
                     <div className="bg-slate-50/50 border border-slate-150 rounded-xl p-4 space-y-3">
                       <div>
@@ -2066,7 +2706,7 @@ export default function App() {
             {/* TAB 4: QC Images & Mappings */}
             {activeTab === 'qc' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                
+
                 {/* Auto Mapping verification */}
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Auto Mapping Section</h2>
@@ -2137,45 +2777,36 @@ export default function App() {
                     )}
                   </div>
                 </div>
- 
+
                 {/* Agarose Gel Image Select */}
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Agarose Gel Mapping</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Assigned Gel Image</label>
-                      {isWebMode ? (
-                        <div className="flex flex-col gap-2">
-                          <label className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all text-center cursor-pointer block">
-                            Upload Gel Image
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleGelImageUpload(file);
-                              }}
-                            />
-                          </label>
-                          {selectedGelImage && (
-                            <span className="text-[10px] text-slate-500 font-mono truncate">
-                              Image loaded client-side
-                            </span>
-                          )}
-                        </div>
-                      ) : (
+                      <div className="flex flex-col gap-2">
                         <select
                           value={selectedGelImage}
                           onChange={(e) => setSelectedGelImage(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:border-sky-500 focus:outline-none"
                         >
                           <option value="">-- Choose Gel Image --</option>
-                          {(scanResult?.imageFiles || []).map((f: string) => (
-                            <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
+                          {availableImages.map((f: string) => (
+                            <option key={f} value={f}>{getImageLabel(f)}</option>
                           ))}
                         </select>
-                      )}
+                        <label className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-center cursor-pointer block">
+                          Upload Custom Gel Image
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleGelImageUpload(file);
+                            }}
+                          />
+                        </label>
+                      </div>
                     </div>
                     {selectedGelImage && (
                       <div className="border border-slate-200 rounded-lg p-2 bg-slate-50 flex items-center justify-center h-48 animate-in zoom-in-95 duration-200">
@@ -2184,11 +2815,79 @@ export default function App() {
                     )}
                   </div>
                 </div>
- 
+
+                {/* Gel Lane Mapping Grid */}
+                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm animate-in fade-in duration-300">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                        RNA Agarose Gel Lane Mapping Grid
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">Associate gel lanes with corresponding experimental samples.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {isWebMode && (
+                        <label className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer">
+                          Import Lane Map Excel
+                          <input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) parseLaneMapExcelClient(file);
+                            }}
+                          />
+                        </label>
+                      )}
+                      <button
+                        onClick={handleAddLaneRow}
+                        className="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition active:scale-95"
+                      >
+                        + Add Lane
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[250px] overflow-y-auto p-1">
+                    {lanes.map((lane, idx) => (
+                      <div key={idx} className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex gap-2 items-center justify-between">
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            value={lane.lane}
+                            onChange={(e) => handleUpdateLaneRow(idx, 'lane', e.target.value)}
+                            placeholder="Lane"
+                            className="bg-white border border-slate-200 text-slate-800 rounded px-2 py-1 text-xs w-10 text-center font-bold"
+                          />
+                          <input
+                            type="text"
+                            value={lane.sample}
+                            onChange={(e) => handleUpdateLaneRow(idx, 'sample', e.target.value)}
+                            placeholder="Sample ID"
+                            className="bg-white border border-slate-200 text-slate-800 rounded px-2 py-1 text-xs w-24 font-mono"
+                          />
+                        </div>
+                        <button
+                          onClick={() => handleRemoveLaneRow(idx)}
+                          className="text-rose-600 hover:text-rose-700 text-xs font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    {lanes.length === 0 && (
+                      <div className="col-span-full py-4 text-center text-xs text-slate-400">
+                        No lane mapping rows defined. Click "+ Add Lane" or upload a mapping file.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* TapeStation sample assignment */}
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">TapeStation Sample Assignments</h2>
-                  
+
                   {isWebMode && (
                     <div className="mb-4 bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-between items-center shrink-0">
                       <div>
@@ -2216,49 +2915,49 @@ export default function App() {
                       return (
                         <div key={idx} className="border border-slate-100 rounded-lg p-3 bg-slate-50 flex items-center justify-between gap-4">
                           <span className="font-mono text-xs font-bold text-slate-700">{row.sample_id}</span>
-                          <div className="flex-1">
-                            {isWebMode ? (
-                              <label className="bg-white hover:bg-slate-100 border border-slate-200 rounded px-2.5 py-1.5 text-xs font-semibold cursor-pointer text-center flex items-center justify-center">
-                                Upload image
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (ev) => {
-                                        const dataUrl = ev.target?.result as string;
-                                        setTapestationImages(prev => {
-                                          const filter = prev.filter(i => i.sample_id !== row.sample_id);
-                                          filter.push({ sample_id: row.sample_id, src: dataUrl });
-                                          return filter;
-                                        });
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }}
-                                />
-                              </label>
-                            ) : (
-                              <select
-                                value={assigned}
-                                onChange={(e) => {
-                                  const filter = tapestationImages.filter(i => i.sample_id !== row.sample_id);
+                          <div className="flex-1 flex flex-col gap-1.5">
+                            <select
+                              value={assigned}
+                              onChange={(e) => {
+                                setTapestationImages(prev => {
+                                  const filter = prev.filter(i => i.sample_id !== row.sample_id);
                                   if (e.target.value) {
                                     filter.push({ sample_id: row.sample_id, src: e.target.value });
                                   }
-                                  setTapestationImages(filter);
+                                  return filter;
+                                });
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs focus:border-sky-500 focus:outline-none font-mono"
+                            >
+                              <option value="">-- No Tape Image --</option>
+                              {availableImages.map((f: string) => (
+                                <option key={f} value={f}>{getImageLabel(f)}</option>
+                              ))}
+                            </select>
+                            
+                            <label className="bg-white hover:bg-slate-100 active:scale-[0.98] border border-slate-200 rounded px-2.5 py-1 text-[10px] font-semibold cursor-pointer text-center block text-slate-600 transition-all">
+                              Upload Custom Image
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                      const dataUrl = ev.target?.result as string;
+                                      setTapestationImages(prev => {
+                                        const filter = prev.filter(i => i.sample_id !== row.sample_id);
+                                        filter.push({ sample_id: row.sample_id, src: dataUrl });
+                                        return filter;
+                                      });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
                                 }}
-                                className="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs focus:border-sky-500 focus:outline-none"
-                              >
-                                <option value="">-- No Tape Image --</option>
-                                {(scanResult?.imageFiles || []).map((f: string) => (
-                                  <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
-                                ))}
-                              </select>
-                            )}
+                              />
+                            </label>
                           </div>
                           {assigned && (
                             <img src={resolveImageSrc(assigned)} alt="Tapestation Profile" className="w-12 h-10 object-cover rounded bg-white animate-in fade-in duration-200" />
@@ -2293,9 +2992,8 @@ export default function App() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => togglePageVisibility(page.id)}
-                              className={`w-5 h-5 flex items-center justify-center rounded-full border text-[10px] transition-colors ${
-                                page.hidden ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-sky-100 border-sky-300 text-sky-700'
-                              }`}
+                              className={`w-5 h-5 flex items-center justify-center rounded-full border text-[10px] transition-colors ${page.hidden ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-sky-100 border-sky-300 text-sky-700'
+                                }`}
                             >
                               {page.hidden ? '✕' : '✓'}
                             </button>
@@ -2318,7 +3016,7 @@ export default function App() {
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                       <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Live EJS Synchronized Preview</span>
                     </div>
-                    
+
                     <iframe
                       title="Live Report"
                       srcDoc={generateLivePreviewHtml()}
@@ -2332,124 +3030,260 @@ export default function App() {
             {/* TAB 6: Export interim and full */}
             {activeTab === 'export' && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm max-w-xl mx-auto text-center space-y-6">
+                <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-sm max-w-3xl mx-auto text-center space-y-6">
                   <div className="w-16 h-16 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center mx-auto text-3xl">
                     📁
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-slate-800">Generate Interim Reports</h2>
+                    <h2 className="text-lg font-bold text-slate-800">Generate NGS Reports</h2>
                     <p className="text-xs text-slate-400 mt-2">Generate PDF, HTML, or DOCX formats automatically in target folder.</p>
                   </div>
 
-                  <div className="space-y-3 pt-4 border-t border-slate-100">
-                    
+                  <div className="pt-6 border-t border-slate-100">
+
                     {isWebMode ? (
-                      <div className="space-y-3">
+                      <div className="space-y-3 max-w-md mx-auto">
                         <button
                           onClick={handleBrowserPrint}
                           className="w-full font-bold py-3 rounded-lg text-xs shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97]"
                         >
                           🖨️ Print / Save Report as PDF
                         </button>
+                        <button
+                          onClick={() => triggerGenerate('interim', 'docx')}
+                          disabled={generatingButton !== null}
+                          className={`w-full font-bold py-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] ${generatingButton === 'interim_docx'
+                              ? 'bg-indigo-400 text-white cursor-wait'
+                              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            }`}
+                        >
+                          {generatingButton === 'interim_docx' ? (
+                            <>
+                              {generationSuccess ? (
+                                <span className="flex items-center gap-1.5 animate-bounce">✓ DOCX Ready — check downloads below!</span>
+                              ) : (
+                                <>
+                                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                  Generating Word DOCX...
+                                </>
+                              )}
+                            </>
+                          ) : '📝 Generate & Download DOCX'}
+                        </button>
+                        <button
+                          onClick={downloadWetLabJson}
+                          className="w-full font-bold py-3 rounded-lg text-xs shadow-sm bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97]"
+                        >
+                          📦 Download Wet Lab JSON (for Bioinfo)
+                        </button>
                         <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                          Note: Since you are running in Web Mode, report compiling is done directly in your browser. Selecting the print option opens your browser's print utility, allowing you to select "Save as PDF" to download it.
+                          Note: Since you are running in Web Mode, PDF report compiling is done directly in your browser. Selecting the print option opens your browser's print utility, allowing you to select "Save as PDF" to download it. DOCX will be available for direct download after generation.
                         </p>
                       </div>
                     ) : (
-                      <>
-                        {/* BUTTON 1: Interim PDF */}
-                        <button
-                          onClick={() => triggerGenerate('interim', 'pdf')}
-                          disabled={generatingButton !== null}
-                          className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
-                            generatingButton === 'interim' 
-                              ? 'bg-sky-500 text-white cursor-wait' 
-                              : 'bg-sky-600 hover:bg-sky-700 text-white'
-                          }`}
-                        >
-                          {generatingButton === 'interim' ? (
-                            <>
-                              {generationSuccess ? (
-                                <span className="flex items-center gap-1.5 animate-bounce">
-                                  ✓ Generated Successfully!
-                                </span>
-                              ) : (
-                                <>
-                                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  Compiling Interim Report...
-                                </>
-                              )}
-                            </>
-                          ) : 'Generate Interim PDF & HTML'}
-                        </button>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                        {/* CARD 1: Interim Report (Wet Lab) */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col justify-between space-y-6">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">🧪</span>
+                              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Interim Report (Wet Lab)</h3>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                              Focuses solely on wet lab notes: DNA isolation, library preparation, gel results, Qubit data, and TapeStation library QC charts.
+                            </p>
+                          </div>
 
-                        {/* BUTTON 2: Combined Report */}
-                        <button
-                          onClick={() => triggerGenerate('comprehensive', 'pdf')}
-                          disabled={generatingButton !== null}
-                          className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
-                            generatingButton === 'comprehensive'
-                              ? 'bg-slate-700 text-white cursor-wait'
-                              : 'bg-slate-900 hover:bg-black text-white'
-                          }`}
-                        >
-                          {generatingButton === 'comprehensive' ? (
-                            <>
-                              {generationSuccess ? (
-                                <span className="flex items-center gap-1.5 animate-bounce">
-                                  ✓ Generated Successfully!
-                                </span>
-                              ) : (
+                          <div className="space-y-2">
+                            {/* BUTTON 1: Interim PDF */}
+                            <button
+                              onClick={() => triggerGenerate('interim', 'pdf')}
+                              disabled={generatingButton !== null}
+                              className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${generatingButton === 'interim'
+                                  ? 'bg-sky-500 text-white cursor-wait'
+                                  : 'bg-sky-600 hover:bg-sky-700 text-white'
+                                }`}
+                            >
+                              {generatingButton === 'interim' ? (
                                 <>
-                                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  Compiling Combined Report...
+                                  {generationSuccess ? (
+                                    <span className="flex items-center gap-1.5 animate-bounce">
+                                      ✓ Generated Successfully!
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Compiling PDF & HTML...
+                                    </>
+                                  )}
                                 </>
-                              )}
-                            </>
-                          ) : 'Generate Combined/Comprehensive Report'}
-                        </button>
+                              ) : 'Generate PDF & HTML'}
+                            </button>
 
-                        {/* BUTTON 3: DOCX */}
-                        <button
-                          onClick={() => triggerGenerate('docx', 'docx')}
-                          disabled={generatingButton !== null}
-                          className={`w-full font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${
-                            generatingButton === 'docx'
-                              ? 'bg-slate-100 text-slate-400 cursor-wait border border-slate-200'
-                              : 'border border-slate-300 hover:bg-slate-50 text-slate-700'
-                          }`}
-                        >
-                          {generatingButton === 'docx' ? (
-                            <>
-                              {generationSuccess ? (
-                                <span className="flex items-center gap-1.5 animate-bounce text-emerald-600">
-                                  ✓ Document Saved!
-                                </span>
-                              ) : (
+                            {/* BUTTON 2: Interim DOCX */}
+                            <button
+                              onClick={() => triggerGenerate('interim', 'docx')}
+                              disabled={generatingButton !== null}
+                              className={`w-full font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${generatingButton === 'interim_docx'
+                                  ? 'bg-slate-100 text-slate-400 cursor-wait border border-slate-200'
+                                  : 'border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white'
+                                }`}
+                            >
+                              {generatingButton === 'interim_docx' ? (
                                 <>
-                                  <svg className="animate-spin h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  Saving Word DOCX...
+                                  {generationSuccess ? (
+                                    <span className="flex items-center gap-1.5 animate-bounce text-emerald-600">
+                                      ✓ Document Saved!
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <svg className="animate-spin h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Saving Word DOCX...
+                                    </>
+                                  )}
                                 </>
-                              )}
-                            </>
-                          ) : 'Generate DOCX Format'}
+                              ) : 'Generate Word DOCX'}
+                            </button>
+
+                            {/* BUTTON 3: Download Wet Lab JSON */}
+                            <button
+                              onClick={downloadWetLabJson}
+                              className="w-full font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white"
+                            >
+                              📦 Download JSON (for Bioinfo)
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* CARD 2: Combined/Comprehensive Report */}
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col justify-between space-y-6">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">📊</span>
+                              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Comprehensive Report</h3>
+                            </div>
+                            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                              Combines the wet lab results with bioinformatic analysis, including raw read sequencing/mapping statistics, pathway enrichment, and differential expression results.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            {/* BUTTON 3: Comprehensive PDF */}
+                            <button
+                              onClick={() => triggerGenerate('comprehensive', 'pdf')}
+                              disabled={generatingButton !== null}
+                              className={`w-full font-bold py-2.5 rounded-lg text-xs shadow-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${generatingButton === 'comprehensive'
+                                  ? 'bg-slate-700 text-white cursor-wait'
+                                  : 'bg-slate-900 hover:bg-black text-white'
+                                }`}
+                            >
+                              {generatingButton === 'comprehensive' ? (
+                                <>
+                                  {generationSuccess ? (
+                                    <span className="flex items-center gap-1.5 animate-bounce">
+                                      ✓ Generated Successfully!
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Compiling PDF & HTML...
+                                    </>
+                                  )}
+                                </>
+                              ) : 'Generate PDF & HTML'}
+                            </button>
+
+                            {/* BUTTON 4: Comprehensive DOCX */}
+                            <button
+                              onClick={() => triggerGenerate('comprehensive', 'docx')}
+                              disabled={generatingButton !== null}
+                              className={`w-full font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] active:duration-75 ${generatingButton === 'comprehensive_docx'
+                                  ? 'bg-slate-100 text-slate-400 cursor-wait border border-slate-200'
+                                  : 'border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white'
+                                }`}
+                            >
+                              {generatingButton === 'comprehensive_docx' ? (
+                                <>
+                                  {generationSuccess ? (
+                                    <span className="flex items-center gap-1.5 animate-bounce text-emerald-600">
+                                      ✓ Document Saved!
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <svg className="animate-spin h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Saving Word DOCX...
+                                    </>
+                                  )}
+                                </>
+                              ) : 'Generate Word DOCX'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Download panel — shown after generation when running via web/cloudflare tunnel */}
+                    {downloadableFiles.length > 0 && downloadableFiles.some(f => f.downloadUrl) && (
+                      <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-5 text-left max-w-2xl mx-auto">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-emerald-600 text-lg">✅</span>
+                          <h3 className="text-sm font-bold text-emerald-800">Report Generated — Download Your Files</h3>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 mb-4 leading-relaxed">
+                          Since you uploaded your folder via the web, the generated files are ready for download. Click each button to save the file to your computer.
+                        </p>
+                        <div className="space-y-2">
+                          {downloadableFiles.filter(f => f.downloadUrl).map((f, idx) => {
+                            const ext = f.path.split('.').pop()?.toUpperCase() || 'FILE';
+                            const fileName = f.path.split(/[/\\]/).pop() || `report.${ext.toLowerCase()}`;
+                            const sizeKb = (f.size / 1024).toFixed(0);
+                            const isPdf = ext === 'PDF';
+                            const isDocx = ext === 'DOCX';
+                            return (
+                              <a
+                                key={idx}
+                                href={f.downloadUrl!}
+                                download={fileName}
+                                className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-xs font-bold transition-all duration-150 hover:opacity-90 active:scale-[0.98] ${isPdf ? 'bg-sky-600 hover:bg-sky-700 text-white' :
+                                    isDocx ? 'bg-indigo-600 hover:bg-indigo-700 text-white' :
+                                      'bg-slate-700 hover:bg-slate-800 text-white'
+                                  }`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span>{isPdf ? '📄' : isDocx ? '📝' : '🗂️'}</span>
+                                  <span>Download {ext} — {fileName}</span>
+                                </span>
+                                <span className="text-[10px] opacity-70">{sizeKb} KB ↓</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                        <button
+                          onClick={() => setDownloadableFiles([])}
+                          className="mt-3 text-[10px] text-emerald-600 hover:text-emerald-800 underline"
+                        >
+                          Clear downloads
                         </button>
-                      </>
+                      </div>
                     )}
 
                   </div>
                 </div>
               </div>
             )}
+
 
           </div>
 
@@ -2465,7 +3299,7 @@ export default function App() {
                 </button>
               )}
             </div>
-            
+
             <div className="flex items-center gap-4">
               <span className="text-xs text-slate-400">
                 Step {tabsList.indexOf(activeTab) + 1} of {tabsList.length}
@@ -2562,9 +3396,9 @@ export default function App() {
               </div>
               <button onClick={() => setShowFolderBrowser(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">×</button>
             </div>
-            
+
             <div className="flex gap-2 shrink-0">
-              <button 
+              <button
                 disabled={!browserParent}
                 onClick={() => fetchDirs(browserParent)}
                 className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"
@@ -2578,7 +3412,7 @@ export default function App() {
                 onKeyDown={(e) => { if (e.key === 'Enter') fetchDirs(browserPath); }}
                 className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono focus:border-sky-500 focus:outline-none"
               />
-              <button 
+              <button
                 onClick={() => fetchDirs(browserPath)}
                 className="bg-sky-600 hover:bg-sky-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition"
               >
@@ -2639,6 +3473,152 @@ export default function App() {
                   Select Folder
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Column Mapping Modal */}
+      {showMappingModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 space-y-6 flex flex-col max-h-[90vh]">
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm">Map Columns from Imported Table</h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Select which column from your imported sheet corresponds to each required field.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 bg-sky-50 text-sky-800 text-xs px-3.5 py-2.5 rounded-lg border border-sky-100 shrink-0">
+              <input
+                type="checkbox"
+                id="firstRowHeader"
+                checked={firstRowIsHeader}
+                onChange={(e) => {
+                  setFirstRowIsHeader(e.target.checked);
+                  setTimeout(() => prepareMapping(mappingData), 0);
+                }}
+                className="rounded text-sky-600"
+              />
+              <label htmlFor="firstRowHeader" className="font-semibold cursor-pointer select-none">
+                First row contains header labels (e.g. "Sample Name", "Concentration")
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 border-y border-slate-100 py-4 shrink-0">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Sample ID / Name Column *</label>
+                <select
+                  value={sampleIdIndex}
+                  onChange={(e) => setSampleIdIndex(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="-1">-- Do Not Map --</option>
+                  {mappingHeaders.map((h, i) => (
+                    <option key={i} value={i}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Concentration Column *</label>
+                <select
+                  value={concIndex}
+                  onChange={(e) => setConcIndex(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="-1">-- Do Not Map --</option>
+                  {mappingHeaders.map((h, i) => (
+                    <option key={i} value={i}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Volume Column</label>
+                <select
+                  value={volIndex}
+                  onChange={(e) => setVolIndex(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="-1">-- Do Not Map (Use default) --</option>
+                  {mappingHeaders.map((h, i) => (
+                    <option key={i} value={i}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Yield Column</label>
+                <select
+                  value={yieldIndex}
+                  onChange={(e) => setYieldIndex(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="-1">-- Do Not Map (Use default) --</option>
+                  {mappingHeaders.map((h, i) => (
+                    <option key={i} value={i}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-xs font-bold text-slate-500 mb-1">Remarks Column</label>
+                <select
+                  value={remarksIndex}
+                  onChange={(e) => setRemarksIndex(parseInt(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:border-sky-500 focus:outline-none"
+                >
+                  <option value="-1">-- Do Not Map (None) --</option>
+                  {mappingHeaders.map((h, i) => (
+                    <option key={i} value={i}>{h}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Live Preview Table */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Import Preview (First 3 rows)</h4>
+              <div className="border border-slate-100 rounded-lg overflow-hidden">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      <th className="px-3 py-2">Sample ID</th>
+                      <th className="px-3 py-2">Concentration</th>
+                      <th className="px-3 py-2">Volume</th>
+                      <th className="px-3 py-2">Yield</th>
+                      <th className="px-3 py-2">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(firstRowIsHeader ? mappingData.slice(1, 4) : mappingData.slice(0, 3)).map((row, idx) => (
+                      <tr key={idx} className="border-b border-slate-100 last:border-0">
+                        <td className="px-3 py-2 font-semibold text-slate-700">{sampleIdIndex !== -1 ? row[sampleIdIndex] || '-' : '-'}</td>
+                        <td className="px-3 py-2 text-slate-600">{concIndex !== -1 ? row[concIndex] || '-' : '-'}</td>
+                        <td className="px-3 py-2 text-slate-600">{volIndex !== -1 ? row[volIndex] || '-' : '-'}</td>
+                        <td className="px-3 py-2 text-slate-600">{yieldIndex !== -1 ? row[yieldIndex] || '-' : '-'}</td>
+                        <td className="px-3 py-2 text-slate-500 truncate max-w-[150px]">{remarksIndex !== -1 ? row[remarksIndex] || '-' : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 shrink-0 border-t border-slate-100 pt-4">
+              <button
+                onClick={() => setShowMappingModal(false)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMapping}
+                className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm"
+              >
+                Confirm & Import
+              </button>
             </div>
           </div>
         </div>

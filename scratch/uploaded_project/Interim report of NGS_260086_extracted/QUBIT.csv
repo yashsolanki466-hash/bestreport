@@ -1,0 +1,7 @@
+S. N,Pool detail,Sample ID,Concentration (ng/µl),Volume (µl ),Yield (µg),Remarks
+1,C1,Control Brain,43,50,2.15,QC PASS
+2,C1,Control Heart,20.2,50,1.01,QC PASS
+3,C1,Control Muscle,25.2,50,1.26,QC PASS
+4,T1,Test Brain,69.6,50,3.48,QC PASS
+5,T1,Test Heart,114,50,5.7,QC PASS
+6,T1,Test Muscle,45,50,2.25,QC PASS

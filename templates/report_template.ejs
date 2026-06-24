@@ -32,9 +32,9 @@
         }
 
         body {
-            font-family: 'Lora', "Times New Roman", serif;
-            font-size: 11pt;
-            line-height: 1.62;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 13pt;
+            line-height: 1.75;
             color: var(--text-main);
             background-color: var(--bg-body);
             margin: 0;
@@ -49,7 +49,7 @@
         h3,
         h4,
         .ui-font {
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: "Times New Roman", Times, serif;
         }
 
         p {
@@ -130,6 +130,47 @@
             font-weight: 600;
         }
 
+        /* Sidebar submenu styles */
+        #TOC ul.toc-submenu {
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+            display: none; /* Collapsed by default */
+        }
+        #TOC ul.toc-submenu.expanded {
+            display: block;
+        }
+        #TOC li.has-children > .toc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #TOC li.has-children > .toc-row a {
+            flex-grow: 1;
+            padding-right: 8px;
+        }
+        .toc-toggle-btn {
+            padding: 12px 20px 12px 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        .toc-toggle-btn.rotated {
+            transform: rotate(180deg);
+        }
+
+        /* Sidebar subsection indentation */
+        #TOC li a.toc-level-2 {
+            padding-left: 45px;
+            font-size: 13px;
+        }
+        #TOC li a.toc-level-3 {
+            padding-left: 60px;
+            font-size: 12px;
+        }
+
         /* Content Area */
         .main-container {
             margin: 40px auto;
@@ -202,10 +243,65 @@
         }
 
         .toc-list {
-            padding-left: 18px;
-            margin: 0;
-            font-size: 12.5px;
-            line-height: 1.55;
+            list-style: none;
+            padding: 0;
+            margin: 0 auto;
+            max-width: 650px;
+            font-family: "Times New Roman", Times, serif;
+            line-height: 2.0;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list li.level-1 {
+            font-weight: bold;
+            font-size: 15px;
+            margin-top: 10px;
+        }
+
+        .toc-list li.level-2 {
+            padding-left: 24px;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .toc-list li.level-3 {
+            padding-left: 48px;
+            font-size: 13.5px;
+            font-weight: normal;
+        }
+
+        .toc-list a {
+            display: flex;
+            align-items: flex-end;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .toc-list .title {
+            white-space: normal;
+        }
+
+        .toc-list .dots {
+            flex-grow: 1;
+            border-bottom: 2px dotted #555;
+            margin: 0 6px;
+            position: relative;
+            top: -4px;
+        }
+
+        .toc-list .page {
+            white-space: nowrap;
+            text-align: right;
+            min-width: 24px;
+            font-weight: bold;
+        }
+
+        .toc-list li.level-2 .page,
+        .toc-list li.level-3 .page {
+            font-weight: normal;
         }
 
         .submitted-to {
@@ -916,9 +1012,9 @@
     <div id="TOC">
         <div class="toc-header">
             <div
-                style="font-weight: 800; color: var(--primary-color); font-size: 18px; letter-spacing: 0.5px; font-family: 'Inter', sans-serif;">
+                style="font-weight: 800; color: var(--primary-color); font-size: 18px; letter-spacing: 0.5px; font-family: 'Times New Roman', Times, serif;">
                 UNIGENOME</div>
-            <div style="font-size: 12px; color: var(--text-muted); font-family: 'Inter', sans-serif;">Final Analysis
+            <div style="font-size: 12px; color: var(--text-muted); font-family: 'Times New Roman', Times, serif;">Final Analysis
                 Report</div>
         </div>
         <ul style="margin-top: 10px;">
@@ -926,35 +1022,80 @@
                         style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 1 Project Details</a>
             </li>
             <li><a href="#section-2"><i data-lucide="users"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 2 Sample Information</a>
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 2 Sample Details</a>
             </li>
-            <li><a href="#section-3"><i data-lucide="flask-conical"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 3 Methods</a></li>
-            <li><a href="#section-4"><i data-lucide="shield-check"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 4 Library QC</a></li>
-            <li><a href="#section-5"><i data-lucide="binary"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 5 Bioinformatics
-                    Analysis</a></li>
-            <li><a href="#section-6"><i data-lucide="bar-chart-3"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 6 Data Statistics</a>
+            
+            <li class="has-children">
+                <div class="toc-row">
+                    <a href="#section-3"><i data-lucide="flask-conical"
+                                style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 3 Methods</a>
+                    <span class="toc-toggle-btn"><i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i></span>
+                </div>
+                <ul class="toc-submenu">
+                    <li><a href="#section-3" class="toc-level-2">3.1. Isolation and Quantitative analysis of RNA:</a></li>
+                    <li><a href="#section-3" class="toc-level-2">3.2. Preparation of Library</a></li>
+                    <li><a href="#section-3" class="toc-level-2">3.3. Quantity and quality check (QC) of library on Agilent Tape Station 4150</a></li>
+                    <li><a href="#section-3" class="toc-level-2">3.4. Cluster Generation and Sequencing</a></li>
+                    <li><a href="#section-3" class="toc-level-2">3.5. Results: RNA QC on 1.0% agarose gel</a></li>
+                    <li><a href="#section-3" class="toc-level-2">3.6. Quantification using Qubit 4.0 Fluorometer</a></li>
+                </ul>
             </li>
-            <li><a href="#section-7"><i data-lucide="dna"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 7 Reference Genome</a>
+
+            <li class="has-children">
+                <div class="toc-row">
+                    <a href="#section-4"><i data-lucide="shield-check"
+                                style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 4 Library QC</a>
+                    <span class="toc-toggle-btn"><i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i></span>
+                </div>
+                <ul class="toc-submenu">
+                    <li><a href="#section-4" class="toc-level-2">4.1. TapeStation 4150 profiles of library loaded in Agilent High Sensitivity D1000ScreenTape&reg;:</a></li>
+                    <li><a href="#section-4" class="toc-level-2">4.2. Wet Lab Inferences</a></li>
+                </ul>
             </li>
-            <li><a href="#section-8"><i data-lucide="map"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 8 Mapping to
-                    Reference</a></li>
-            <li><a href="#section-9"><i data-lucide="layers"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 9 Transcript Assembly</a>
+
+            <li class="has-children">
+                <div class="toc-row">
+                    <a href="#section-5"><i data-lucide="binary"
+                                style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 5 Bioinformatics Analysis</a>
+                    <span class="toc-toggle-btn"><i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i></span>
+                </div>
+                <ul class="toc-submenu">
+                    <li><a href="#section-5" class="toc-level-2">5.1. Bioinformatics Workflow</a></li>
+                    <li><a href="#section-5" class="toc-level-2">5.2. Detail of Software used for analysis</a></li>
+                    <li><a href="#section-6" class="toc-level-2">5.3. Data statistics</a></li>
+                    <li><a href="#section-7" class="toc-level-2">5.4. Reference genome information</a></li>
+                    <li><a href="#section-8" class="toc-level-2">5.5. Mapping to reference genome</a></li>
+                    
+                    <li class="has-children">
+                        <div class="toc-row">
+                            <a href="#section-9" class="toc-level-2">5.6. Transcript assembly</a>
+                            <span class="toc-toggle-btn"><i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i></span>
+                        </div>
+                        <ul class="toc-submenu">
+                            <li><a href="#section-9" class="toc-level-3">5.7. Comparison of assembled transcripts with reference transcripts</a></li>
+                            <li><a href="#section-9" class="toc-level-3">5.7.1. Identification of novel isoform transcripts</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="has-children">
+                        <div class="toc-row">
+                            <a href="#section-10" class="toc-level-2">5.8. Differential expression analysis</a>
+                            <span class="toc-toggle-btn"><i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i></span>
+                        </div>
+                        <ul class="toc-submenu">
+                            <li><a href="#section-10" class="toc-level-3">5.8.1. MA Plot for differentially expressed genes</a></li>
+                            <li><a href="#section-10" class="toc-level-3">5.8.2. Volcano plot for differentially expressed genes</a></li>
+                            <li><a href="#section-10" class="toc-level-3">5.8.3. Heatmap for significantly differential expressed genes</a></li>
+                            <li><a href="#section-11" class="toc-level-3">5.8.4. Gene Ontology (GO) analysis for significant DEG</a></li>
+                            <li><a href="#section-11" class="toc-level-3">5.8.5. Pathway analysis for significant DGE</a></li>
+                            <li><a href="#section-11" class="toc-level-3">5.8.6. Over-representation (or enrichment) analysis</a></li>
+                        </ul>
+                    </li>
+                </ul>
             </li>
-            <li><a href="#section-10"><i data-lucide="git-compare"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 10 Differential
-                    Expression</a></li>
-            <li><a href="#section-11"><i data-lucide="tags"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 11 Functional
-                    Annotation</a></li>
+
             <li><a href="#section-12"><i data-lucide="package"
-                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 12 Deliverables</a></li>
+                        style="width:16px; margin-right:8px; vertical-align:text-bottom;"></i> 6 Deliverables</a></li>
         </ul>
     </div>
 
@@ -999,20 +1140,214 @@
 
         <div class="toc-page" id="section-toc-print">
             <div class="toc-title">Table of Contents</div>
-            <ol class="toc-list">
-                <li>Project Details</li>
-                <li>Sample Details</li>
-                <li>Methods</li>
-                <li>Quantity and quality check (QC) of library on Agilent Tape Station 4150</li>
-                <li>Bioinformatics Analysis</li>
-                <li>Data statistics</li>
-                <li>Reference genome information</li>
-                <li>Mapping to reference genome</li>
-                <li>Transcript assembly</li>
-                <li>Differential expression analysis</li>
-                <li>Functional annotation</li>
-                <li>Deliverables</li>
-            </ol>
+            <ul class="toc-list">
+                <li class="level-1">
+                    <a href="#section-1">
+                        <span class="title">1. Project Details</span>
+                        <span class="dots"></span>
+                        <span class="page">3</span>
+                    </a>
+                </li>
+                <li class="level-1">
+                    <a href="#section-2">
+                        <span class="title">2. Sample Details</span>
+                        <span class="dots"></span>
+                        <span class="page">3</span>
+                    </a>
+                </li>
+                <li class="level-1">
+                    <a href="#section-3">
+                        <span class="title">3. Methods</span>
+                        <span class="dots"></span>
+                        <span class="page">3</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-3">
+                        <span class="title">3.1. Isolation and Quantitative analysis of RNA:</span>
+                        <span class="dots"></span>
+                        <span class="page">3</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-3">
+                        <span class="title">3.2. Preparation of Library</span>
+                        <span class="dots"></span>
+                        <span class="page">3</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-3">
+                        <span class="title">3.3. Quantity and quality check (QC) of library on Agilent Tape Station
+                            4150</span>
+                        <span class="dots"></span>
+                        <span class="page">4</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-3">
+                        <span class="title">3.4. Cluster Generation and Sequencing</span>
+                        <span class="dots"></span>
+                        <span class="page">4</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-3">
+                        <span class="title">3.5. Results: RNA QC on 1.0% agarose gel</span>
+                        <span class="dots"></span>
+                        <span class="page">5</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-3">
+                        <span class="title">3.6. Quantification using Qubit 4.0 Fluorometer</span>
+                        <span class="dots"></span>
+                        <span class="page">5</span>
+                    </a>
+                </li>
+                <li class="level-1">
+                    <a href="#section-4">
+                        <span class="title">4. Quantity and quality check (QC) of library on Agilent Tape Station
+                            4150</span>
+                        <span class="dots"></span>
+                        <span class="page">6</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-4">
+                        <span class="title">4.1. TapeStation 4150 profiles of library loaded in Agilent High Sensitivity
+                            D1000ScreenTape&reg;:</span>
+                        <span class="dots"></span>
+                        <span class="page">6</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-4">
+                        <span class="title">4.2. Wet Lab Inferences</span>
+                        <span class="dots"></span>
+                        <span class="page">9</span>
+                    </a>
+                </li>
+                <li class="level-1">
+                    <a href="#section-5">
+                        <span class="title">5. Bioinformatics Analysis</span>
+                        <span class="dots"></span>
+                        <span class="page">10</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-5">
+                        <span class="title">5.1. Bioinformatics Workflow</span>
+                        <span class="dots"></span>
+                        <span class="page">10</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-5">
+                        <span class="title">5.2. Detail of Software used for analysis</span>
+                        <span class="dots"></span>
+                        <span class="page">11</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-6">
+                        <span class="title">5.3. Data statistics</span>
+                        <span class="dots"></span>
+                        <span class="page">12</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-7">
+                        <span class="title">5.4. Reference genome information</span>
+                        <span class="dots"></span>
+                        <span class="page">13</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-8">
+                        <span class="title">5.5. Mapping to reference genome</span>
+                        <span class="dots"></span>
+                        <span class="page">14</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-9">
+                        <span class="title">5.6. Transcript assembly</span>
+                        <span class="dots"></span>
+                        <span class="page">15</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-9">
+                        <span class="title">5.7. Comparison of assembled transcripts with reference transcripts</span>
+                        <span class="dots"></span>
+                        <span class="page">17</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-9">
+                        <span class="title">5.7.1. Identification of novel isoform transcripts</span>
+                        <span class="dots"></span>
+                        <span class="page">18</span>
+                    </a>
+                </li>
+                <li class="level-2">
+                    <a href="#section-10">
+                        <span class="title">5.8. Differential expression analysis</span>
+                        <span class="dots"></span>
+                        <span class="page">19</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-10">
+                        <span class="title">5.8.1. MA Plot for differentially expressed genes</span>
+                        <span class="dots"></span>
+                        <span class="page">22</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-10">
+                        <span class="title">5.8.2. Volcano plot for differentially expressed genes</span>
+                        <span class="dots"></span>
+                        <span class="page">23</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-10">
+                        <span class="title">5.8.3. Heatmap for significantly differential expressed genes</span>
+                        <span class="dots"></span>
+                        <span class="page">24</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-11">
+                        <span class="title">5.8.4. Gene Ontology (GO) analysis for significant DEG</span>
+                        <span class="dots"></span>
+                        <span class="page">25</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-11">
+                        <span class="title">5.8.5. Pathway analysis for significant DGE</span>
+                        <span class="dots"></span>
+                        <span class="page">26</span>
+                    </a>
+                </li>
+                <li class="level-3">
+                    <a href="#section-11">
+                        <span class="title">5.8.6. Over-representation (or enrichment) analysis</span>
+                        <span class="dots"></span>
+                        <span class="page">30</span>
+                    </a>
+                </li>
+                <li class="level-1">
+                    <a href="#section-12">
+                        <span class="title">6. Deliverables</span>
+                        <span class="dots"></span>
+                        <span class="page">34</span>
+                    </a>
+                </li>
+            </ul>
         </div>
 
         <!-- Print Footer (Repeating) -->
@@ -1141,19 +1476,19 @@
             <h2>3 Methods</h2>
 
             <h3>3.1 Isolation and Quantitative analysis of RNA:</h3>
-            <p><%= static_snippets['wet_lab']?.['rna_isolation_qc'] || 'RNA samples were extracted from leaf
+            <p><%= static_snippets['wet_lab']?.['rna_isolation_qc'] || `RNA samples were extracted from leaf
                 sample using PVP extraction method. RNA quantity was measured using Qubit® 4.0 fluorometer and quality
-                were analyzed by using 1% agarose gel.'  %></p>
+                were analyzed by using 1% agarose gel.`  %></p>
 
             <h3>3.2 Preparation of Library</h3>
-            <p><%=  static_snippets['wet_lab'] || {}['library_preparation'] || 'The paired-end sequencing library
+            <p><%=  static_snippets['wet_lab']?.['library_preparation'] || `The paired-end sequencing library
                 was prepared using KAPA mRNA HyperPrep Kit for Illumina. (CAT #KK8581]. The library preparation process
                 was initiated with 500-1000 ng input. mRNA enrichment was performed as per user manual and mRNA was
                 subjected to fragmentation, first & second-strand cDNA synthesis, end-repair, 3´ adenylating, adapter
                 ligation, selective enrichment of adapter-ligated DNA fragments through PCR amplification, followed by
                 validation of Library on Agilent 4150 tape station. The final library was pooled with other-samples,
                 denatured & loaded on to flow cell. On the flow cell, cluster generation & sequencing was performed
-                using Illumina Novaseq X plus platform to generate 2×150bp paired-end (PE) read'  %></p>
+                using Illumina Novaseq X plus platform to generate 2×150bp paired-end (PE) read`  %></p>
 
             <h3>3.3 Quantification using Qubit 4.0 Fluorometer</h3>
             <div class="table-wrapper">
@@ -1170,9 +1505,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Placeholder for Qubit Data: Assuming a static placeholder || passed data -->
-                        <!-- In a real scenario, this would loop over a 'qubit_data' list -->
-                        <% qubit_data.forEach(function(q) { %>
+                        <% if (qubit_data && qubit_data.length > 0) { %>
+                        <% qubit_data.forEach(function(q, index) { %>
                         <tr>
                             <td><%=  index + 1  %></td>
                             <td><%=  q.sample_id  %></td>
@@ -1181,11 +1515,12 @@
                             <td><%=  q.yield  %></td>
                             <td><%=  q.remarks  %></td>
                         </tr>
+                        <% }); %>
                         <% } else { %>
                         <tr>
                             <td colspan="6">No Qubit data available</td>
                         </tr>
-                        <% }); %>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
@@ -1218,8 +1553,8 @@
         <!-- Section 5 -->
         <div id="section-5" class="section">
             <h2>5 Bioinformatics Analysis</h2>
-            <p><%=  static_snippets['bioinformatics'] || {}['analysis_intro'] || 'Bioinformatics analysis includes
-                read filtering, mapping, assembly, differential expression, and functional annotation.'  %></p>
+            <p><%=  static_snippets['bioinformatics']?.['analysis_intro'] || `Bioinformatics analysis includes
+                read filtering, mapping, assembly, differential expression, and functional annotation.`  %></p>
 
             <% if (workflow_figure_src ) { %>
             <div class="figure">
@@ -1228,7 +1563,7 @@
             </div>
             <% } %>
             <h3>5.1 Bioinformatics Workflow</h3>
-            <p><%=  static_snippets['bioinformatics'] || {}['workflow_narrative') || 'Raw data was filtered to
+            <p><%=  static_snippets['bioinformatics']?.['workflow_narrative'] || `Raw data was filtered to
                 remove adapters and low-quality bases. Clean reads thus produced were used for analysis. Reference
                 guided transcript assembly was performed for samples first by mapping clean reads on reference genome
                 using STAR (v2.7.10a) aligner and then performing transcript assembly by StringTie (v 2.2.1). A
@@ -1238,7 +1573,7 @@
                 transcript were taken as input for differential expression analysis using edgeR package. Gene Ontology
                 and pathway analysis of the significantly differentially expressed transcripts were performed using
                 Blast2go cli and KEGG-KAAS server respectively. Overall bioinformatics workflow is graphically
-                represented in figure above and software version along with its use in table below.'  %></p>
+                represented in figure above and software version along with its use in table below.`  %></p>
 
             <h3>5.2 Detail of Software used for analysis</h3>
             <div class="table-wrapper">
@@ -1252,8 +1587,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% var wf_table = static_snippets['workflow'] || {}['software_table'] || {} ; %>
-                        <% var wf_rows = wf_table ? wf_table['rows'] || [] : []; %>
+                        <% const wf_table = static_snippets.workflow?.software_table || {}; %>
+                        <% const wf_rows = wf_table.rows || []; %>
                         <% if (wf_rows && wf_rows.length > 0 ) { %>
                         <% wf_rows.forEach(function(r) { %>
                         <tr>
@@ -1323,8 +1658,8 @@
         <!-- Section 6 -->
         <div id="section-6" class="section">
             <h2>6 Data Statistics</h2>
-            <p><%=  static_snippets['data_stats'] || {}['illumina_intro') || 'Next-generation sequencing statistics
-                for raw data generated on the Novaseq platform are provided in the table below.'  %></p>
+            <p><%=  static_snippets.data_stats?.illumina_intro || `Next-generation sequencing statistics
+                for raw data generated on the Novaseq platform are provided in the table below.`  %></p>
             <div class="table-wrapper">
                 <div class="table-title">Table 6.1: Sequencing Data Statistics</div>
                 <table>
@@ -1357,10 +1692,7 @@
         <!-- Section 7 -->
         <div id="section-7" class="section">
             <h2>7 Reference Genome</h2>
-            <p><%=  static_snippets['reference'] || {}['genome_source') || 'The reference genome of ' +
-                reference_organism + ' was used for alignment and annotation.'  %></p>
-            <p><%=  static_snippets.get('reference'] || {}['gff_annotation') || 'The corresponding GFF file contains
-                locus and structural information regarding ' + total_genes + ' genes.'  %></p>
+            <p><%= static_snippets.reference?.genome_source || 'The reference genome of ' + reference_organism + ' was used for alignment and annotation.' %></p>
             <div class="table-wrapper">
                 <div class="table-title">Table 7.1: Reference Genome Statistics</div>
                 <table>
@@ -1373,35 +1705,63 @@
                     <tbody>
                         <tr>
                             <td>Total Chromosomes/Scaffolds</td>
-                            <td><%=  ref_stats.total_scaffolds  %></td>
+                            <td><%= ref_stats.total_scaffolds %></td>
                         </tr>
                         <tr>
                             <td>Total Genome Length (bp)</td>
-                            <td><%=  ref_stats.genome_length  %></td>
+                            <td><%= ref_stats.genome_length %></td>
                         </tr>
                         <tr>
                             <td>Mean Scaffold Size</td>
-                            <td><%=  ref_stats.mean_scaffold_size  %></td>
+                            <td><%= ref_stats.mean_scaffold_size %></td>
                         </tr>
                         <tr>
                             <td>Max Scaffold Size (bp)</td>
-                            <td><%=  ref_stats.max_scaffold_size  %></td>
+                            <td><%= ref_stats.max_scaffold_size %></td>
                         </tr>
                         <tr>
                             <td>Total Genes Annotated</td>
-                            <td><%=  total_genes  %></td>
+                            <td><%= total_genes %></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <p>The reference GFF file contains genome annotation. It includes information (locus and description) regarding genes and proteins. The fasta sequence of the reference genome along with the corresponding GFF file is provided with the deliverables in the folder named <strong>"02_Reference_Genome_and_GFF"</strong> for client's reference.</p>
+
+            <% if (ref_stats?.features && Object.keys(ref_stats.features).length > 0) { %>
+            <div class="table-wrapper">
+                <div class="table-title">Table 7.2: Detail Information of GFF file</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Genome elements</th>
+                            <th># Sequences</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% 
+                           const keys = Object.keys(ref_stats.features).sort();
+                           keys.forEach(function(key) {
+                               const count = ref_stats.features[key];
+                        %>
+                            <tr>
+                                <td><strong><%= key %></strong></td>
+                                <td class="mono"><%= count.toLocaleString() %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+            <% } %>
         </div>
 
         <!-- Section 8 -->
         <div id="section-8" class="section">
             <h2>8 Mapping to Reference</h2>
-            <p><%=  static_snippets.get('mapping'] || {}['star_methodology') || 'Alignment to the reference genome
+            <p><%=  static_snippets.mapping?.star_methodology || `Alignment to the reference genome
                 allows the identification of reads originating from specific loci. Mapping results show high percentages
-                of uniquely mapped reads for most samples.'  %></p>
+                of uniquely mapped reads for most samples.`  %></p>
             <div class="table-wrapper">
                 <div class="table-title">Table 8.1: Mapping Statistics</div>
                 <table>
@@ -1425,7 +1785,7 @@
                             <td class="mono"><%=  m.unique_reads  %></td>
                             <td><%=  m.percent_unique  %></td>
                         </tr>
-                        <% }]; %>
+                        <% }); %>
                     </tbody>
                 </table>
             </div>
@@ -1434,19 +1794,19 @@
         <!-- Section 9 -->
         <div id="section-9" class="section">
             <h2>9 Transcript Assembly</h2>
-            <p><%=  static_snippets.get('assembly'] || {}.get('stringtie_methodology'] || 'StringTie assembles transcripts
+            <p><%=  static_snippets.assembly?.stringtie_methodology || `StringTie assembles transcripts
                 from RNA-seq reads that have been aligned to the genome, first grouping the reads into distinct gene
-                loci and then assembling each locus into as many isoforms as are needed to explain the data.'  %></p>
+                loci and then assembling each locus into as many isoforms as are needed to explain the data.`  %></p>
 
-            <p><%=  static_snippets['assembly'] || {}['stringtie_merge'] || 'After assembling each sample, the full
-                set of assemblies is passed to StringTie\'s merge function, which merges together all the gene
+            <p><%=  static_snippets.assembly?.stringtie_merge || `After assembling each sample, the full
+                set of assemblies is passed to StringTie's merge function, which merges together all the gene
                 structures found in any of the samples. This step is required because transcripts in some of the samples
-                might only be partially covered by reads.'  %></p>
+                might only be partially covered by reads.`  %></p>
 
             <% if (stringtie_merge_figure_src ) { %>
             <div class="figure">
                 <img src="<%=  stringtie_merge_figure_src  %>" alt="StringTie merge illustration" />
-                <p class="caption"><%=  static_snippets['assembly'] || {}['stringtie_merge_caption') || ''  %></p>
+                <p class="caption"><%=  static_snippets.assembly?.stringtie_merge_caption || ''  %></p>
             </div>
             <% } %>
 
@@ -1475,11 +1835,11 @@
             </div>
 
             <h3>9.1 Comparison of assembled transcripts with reference transcripts</h3>
-            <p><%=  static_snippets['assembly'] || {}.get('gffcompare_methodology'] || 'For comparison of assembled
+            <p><%=  static_snippets.assembly?.gffcompare_methodology || `For comparison of assembled
                 transcripts with reference transcripts, Gffcompare utility was run taking the reference GTF and the
                 string-tie merged GTF file. This produces an output file, which adds to each transcript a "class code"
                 and the name of the transcript from the reference annotation file to check how the predicted transcripts
-                relate to an annotation file.'  %></p>
+                relate to an annotation file.`  %></p>
 
             <% if (gffcompare_codes_src ) { %>
             <div class="figure">
@@ -1491,10 +1851,10 @@
             <% } %>
 
             <h3>9.2 Identification of novel isoform transcripts</h3>
-            <p><%=  static_snippets['assembly'] || {}['novel_isoforms'] || 'To identify novel isoform transcripts
+            <p><%=  static_snippets.assembly?.novel_isoforms || `To identify novel isoform transcripts
                 not present in the reference GTF file, gffcompare utility was run taking the reference GTF and the
                 string-tie merged GTF file. Class code "j" means that predicted transcript is a potential novel isoform
-                that shares at least one splice junction with a reference transcript.'  %></p>
+                that shares at least one splice junction with a reference transcript.`  %></p>
 
             <% if (isoforms_figure_src ) { %>
             <div class="figure">
@@ -1507,12 +1867,12 @@
         <!-- Section 10 -->
         <div id="section-10" class="section">
             <h2>10 Differential Expression</h2>
-            <p><%=  static_snippets['dge'] || {}['intro') || ''  %></p>
+            <p><%=  static_snippets.dge?.intro || ''  %></p>
 
             <h3>Comparison information</h3>
             <div class="table-wrapper">
                 <div class="table-title">Table 10.1: Comparison information</div>
-                <% var dge_cmp = dge_comparison_table || static_snippets['dge']?.['comparison_info_table'] || {}; %>
+                <% var dge_cmp = dge_comparison_table || static_snippets.dge?.comparison_info_table || {}; %>
                 <% var dge_cmp_rows = dge_cmp ? dge_cmp['rows'] || [] : []; %>
                 <table>
                     <thead>
@@ -1542,7 +1902,7 @@
             <h3>Group wise sample information</h3>
             <div class="table-wrapper">
                 <div class="table-title">Table 10.2: Sample description</div>
-                <% var dge_grp = dge_group_table || static_snippets['dge']?.['group_sample_table'] || {}; %>
+                <% var dge_grp = dge_group_table || static_snippets.dge?.group_sample_table || {}; %>
                 <% var dge_grp_rows = dge_grp ? dge_grp['rows'] || [] : []; %>
                 <table>
                     <thead>
@@ -1569,10 +1929,10 @@
                 </table>
             </div>
 
-            <p><%=  static_snippets['dge'] || {}['deseq2_intro') || ''  %></p>
+            <p><%=  static_snippets.dge?.deseq2_intro || ''  %></p>
             <div class="table-wrapper">
                 <div class="table-title">Table 10.3: Column description of DESeq2 output</div>
-                <% var dge_cols = static_snippets['dge'] || {}['deseq2_columns_table'] || {} ; %>
+                <% var dge_cols = static_snippets.dge?.deseq2_columns_table || {}; %>
                 <% var dge_cols_rows = dge_cols ? dge_cols['rows'] || [] : []; %>
                 <% if (dge_cols_rows && dge_cols_rows.length > 0 ) { %>
                 <table>
@@ -1595,11 +1955,11 @@
                 <% } %>
             </div>
 
-            <p><%=  static_snippets['dge'] || {}['criteria_intro') || ''  %></p>
+            <p><%=  static_snippets.dge?.criteria_intro || ''  %></p>
             <div class="table-wrapper">
                 <div class="table-title">Table 10.4: Criteria used to identify upregulated and downregulated genes and
                     assigning the significance</div>
-                <% var dge_crit = static_snippets['dge'] || {}['criteria_table'] || {} ; %>
+                <% var dge_crit = static_snippets.dge?.criteria_table || {}; %>
                 <% var dge_crit_rows = dge_crit ? dge_crit['rows'] || [] : []; %>
                 <% if (dge_crit_rows && dge_crit_rows.length > 0 ) { %>
                 <table>
@@ -1622,7 +1982,7 @@
                 <% } %>
             </div>
 
-            <p><%=  static_snippets['dge'] || {}['stats_note') || ''  %></p>
+            <p><%=  static_snippets.dge?.stats_note || ''  %></p>
             <div class="table-wrapper">
                 <div class="table-title">Table 10.5: Differential gene expression statistics</div>
                 <table>
@@ -1649,22 +2009,22 @@
                 </table>
             </div>
 
-            <p><%=  static_snippets['dge'] || {}['annotation_note') || ''  %></p>
+            <p><%=  static_snippets.dge?.annotation_note || ''  %></p>
 
             <% if (dge_figures && dge_figures.length > 0 ) { %>
             <h3>10.1 MA Plot for differentially expressed genes</h3>
-            <p><%=  static_snippets.get('dge'] || {}['ma_plot_text') || ''  %></p>
+            <p><%=  static_snippets.dge?.ma_plot_text || ''  %></p>
 
             <h3>10.2 Volcano plot for differentially expressed genes</h3>
-            <p><%=  static_snippets.get('dge'] || {}.get('volcano_plot_text') || ''  %></p>
+            <p><%=  static_snippets.dge?.volcano_plot_text || ''  %></p>
 
             <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Select a comparison to view
                 interactive MA and Volcano plots.</p>
 
             <!-- Comparison Selector -->
             <div class="comp-toggles" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 8px;">
-                <% dge_figures.forEach(function(fig) { %>
-                <button class="chart-btn comp-btn <% if (loop.first ) { %>active<% } %>"
+                <% dge_figures.forEach(function(fig, index) { %>
+                <button class="chart-btn comp-btn <%= index === 0 ? 'active' : '' %>"
                     onclick="showComparison('<%=  fig.comparison  %>')" data-comparison="<%=  fig.comparison  %>"
                     style="padding: 8px 16px; border: 1px solid var(--border-light); background: #fff; color: var(--text-main); border-radius: 4px; cursor: pointer; font-size: 12px;">
                     <%=  fig.comparison  %>
@@ -1673,8 +2033,8 @@
             </div>
 
             <!-- Plots Container -->
-            <% dge_figures.forEach(function(fig) { %>
-            <div id="plot-<%=  fig.comparison  %>" class="comparison-plots <% if (not loop.first ) { %>hidden<% } %>"
+            <% dge_figures.forEach(function(fig, index) { %>
+            <div id="plot-<%=  fig.comparison  %>" class="comparison-plots <%= index === 0 ? '' : 'hidden' %>"
                 style="margin-bottom: 30px;">
 
                 <% if (fig.plot_data_json ) { %>
@@ -1765,7 +2125,7 @@
                 </div>
                 <% } %>
             </div>
-            <% }]; %>
+            <% }); %>
 
             <script>
                 const __dgeCharts = { ma: {}, volcano: {} };
@@ -1794,7 +2154,21 @@
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: { display: true, position: 'top' },
-                                title: { display: false, text: titleText }
+                                title: { display: false, text: titleText },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const x = context.parsed.x !== undefined ? context.parsed.x.toFixed(2) : 'N/A';
+                                            const y = context.parsed.y !== undefined ? context.parsed.y.toFixed(2) : 'N/A';
+                                            const label = context.raw && context.raw.label ? context.raw.label : '';
+                                            const datasetLabel = context.dataset.label;
+                                            if (label && (datasetLabel === 'Up' || datasetLabel === 'Down')) {
+                                                return `${label}: (${x}, ${y})`;
+                                            }
+                                            return `(${x}, ${y})`;
+                                        }
+                                    }
+                                }
                             },
                             scales: {
                                 x: { title: { display: true, text: xLabel } },
@@ -1875,15 +2249,65 @@
 
         <!-- Section 11 -->
         <div id="section-11" class="section">
-            <h2>11 Functional Annotation</h2>
+            <h4>5.8.4. Gene Ontology (GO) analysis for significant DEG</h4>
+            <p>
+                The Gene Ontology project provides controlled vocabularies of defined terms representing gene product
+                properties. These cover three domains: Cellular Component, the parts of a cell or its extracellular
+                environment; Molecular Function, the elemental activities of a gene product at the molecular level, such
+                as binding or catalysis; and Biological Process, operations or sets of molecular events with a defined
+                beginning and end, pertinent to the functioning of integrated living units: cells, tissues, organs, and
+                organisms. GO was assigned to significant differentially expressed transcripts using Blast2go cli.
+                Single gene can be assigned with multiple GO categories and hence multiple GO terms. The GO domain
+                distribution is shown in table below:
+            </p>
 
-            <h3>11.1 Pathway analysis for significant DGE</h3>
+            <div class="table-wrapper">
+                <div class="table-title">Table 5.8.6: GO Distribution of Significantly Differential expression transcripts</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sample Name</th>
+                            <th>Significant DGE</th>
+                            <th># Seq with GO</th>
+                            <th>Biological Process</th>
+                            <th>Cellular Component</th>
+                            <th>Molecular Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% go_distribution.forEach(function(g) { %>
+                        <tr>
+                            <td>
+                                <%= g.combination %>
+                            </td>
+                            <td>
+                                <%= g.sig_dge %>
+                            </td>
+                            <td>
+                                <%= g.sq_go %>
+                            </td>
+                            <td>
+                                <%= g.bp %>
+                            </td>
+                            <td>
+                                <%= g.cc %>
+                            </td>
+                            <td>
+                                <%= g.mf %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4>5.8.5. Pathway analysis for significant DGE</h4>
             <p>Mapping of significantly differentially expressed transcripts to biological pathways was performed using
                 <strong>KEGG-KAAS</strong>. Results represent metabolic pathways of major biomolecules.
             </p>
 
             <div class="table-wrapper">
-                <div class="table-title">Table 11.2: KEGG Pathway Statistics</div>
+                <div class="table-title">Table 5.8.7: KEGG Pathway Statistics</div>
                 <table>
                     <thead>
                         <tr>
@@ -1904,43 +2328,17 @@
                 </table>
             </div>
 
-            <h3>11.2 Gene Ontology (GO) Distribution</h3>
-            <p>Functional categorization of differentially expressed genes was performed using Gene Ontology (GO)
-                consisting of three main branches: Biological Process (BP), Molecular Function (MF), and Cellular
-                Component (CC).</p>
-            <div class="table-wrapper">
-                <div class="table-title">Table 11.3: GO Distribution Statistics</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ontology</th>
-                            <th>Term</th>
-                            <th>Gene Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% go_distribution.forEach(function(g) { %>
-                        <tr>
-                            <td><%=  g.ontology  %></td>
-                            <td><%=  g.term  %></td>
-                            <td><%=  g.count  %></td>
-                        </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-            </div>
-
             <% if (func_assets && func_assets.kegg_pathway_image_src ) { %>
             <div class="figure">
                 <img src="<%=  func_assets.kegg_pathway_image_src  %>" alt="KEGG pathway" />
-                <p class="caption">Representative KEGG pathway image</p>
+                <p class="caption">Figure 5.8.5: Representative KEGG pathway image</p>
             </div>
             <% } %>
 
             <% if (pathway_ex_figure_src && (!func_assets || !func_assets.kegg_pathway_image_src) ) { %>
             <div class="figure">
                 <img src="<%=  pathway_ex_figure_src  %>" alt="KEGG pathway example" />
-                <p class="caption">Representative pathway example</p>
+                <p class="caption">Figure 5.8.5: Representative pathway example</p>
             </div>
             <% } %>
 
@@ -1952,7 +2350,7 @@
             </div>
             <% } %>
             <div class="table-wrapper">
-                <div class="table-title">Table 11.2: KEGG Pathway Statistics (first 15 rows)</div>
+                <div class="table-title">Table 5.8.7: KEGG Pathway Statistics (first 15 rows)</div>
                 <table>
                     <thead>
                         <tr>
@@ -1974,9 +2372,19 @@
                     </tbody>
                 </table>
             </div>
+            
+            <div class="table-note" style="color: var(--secondary-color); font-family: 'Times New Roman', Times, serif; font-weight: bold; margin-top: 15px; margin-bottom: 20px; font-size: 14.5px; line-height: 1.6;">
+                <div style="margin-bottom: 5px;">Note:</div>
+                <div style="padding-left: 20px; text-indent: -20px; margin-bottom: 4px; text-align: justify;">
+                    (a) Non-specific organism pathway hits are obtained in pathway results due to lenient threshold (bit score: 60) applied in KAAS webserver.
+                </div>
+                <div style="padding-left: 20px; text-indent: -20px; text-align: justify;">
+                    (b) Pathway stats for only one comparison has been shown above, however stats and images for all other combinations has been provided as a part of data deliverables “07_Significant_DGE_pathways”.
+                </div>
+            </div>
             <% } %>
 
-            <h3>11.2 Enrichment Analysis</h3>
+            <h4>5.8.6. Over-representation (or enrichment) analysis</h4>
             <p><%= static_snippets.enrichment?.intro || 'Over-representation (enrichment) analysis is a statistical approach used to identify biological functions, pathways, or processes that are significantly over-represented.' %></p>
 
             <% if (func_assets && (func_assets.barplot_image_src || func_assets.dotplot_image_src || func_assets.enrichment_image_src)) { %>
@@ -1984,19 +2392,19 @@
                 <% if (func_assets.barplot_image_src) { %>
                 <div class="figure" style="flex: 1; min-width: 300px; max-width: 500px; text-align: center;">
                     <img src="<%= func_assets.barplot_image_src %>" alt="Enrichment Barplot" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
-                    <p class="caption">Representative Enrichment Barplot</p>
+                    <p class="caption">Figure 5.8.6: Representative Enrichment Barplot</p>
                 </div>
                 <% } %>
                 <% if (func_assets.dotplot_image_src) { %>
                 <div class="figure" style="flex: 1; min-width: 300px; max-width: 500px; text-align: center;">
                     <img src="<%= func_assets.dotplot_image_src %>" alt="Enrichment Dotplot" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
-                    <p class="caption">Representative Enrichment Dotplot</p>
+                    <p class="caption">Figure 5.8.7: Representative Enrichment Dotplot</p>
                 </div>
                 <% } %>
                 <% if (!func_assets.barplot_image_src && !func_assets.dotplot_image_src && func_assets.enrichment_image_src) { %>
                 <div class="figure" style="flex: 1; min-width: 300px; max-width: 500px; text-align: center;">
                     <img src="<%= func_assets.enrichment_image_src %>" alt="Enrichment Plot" style="width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;" />
-                    <p class="caption">Representative Enrichment Plot</p>
+                    <p class="caption">Figure 5.8.6: Representative Enrichment Plot</p>
                 </div>
                 <% } %>
             </div>
@@ -2005,7 +2413,7 @@
 
         <!-- Section 12 Deliverables -->
         <div id="section-12" class="section">
-            <h2>12 Deliverables</h2>
+            <h2>6. Deliverables</h2>
             <p>The following deliverables are provided with this report:</p>
             <ul>
                 <li>Raw Data (FastQ)</li>
@@ -2072,6 +2480,50 @@
                 window.lucide.createIcons();
             }
 
+            // Collapsible Accordion logic
+            document.querySelectorAll('.toc-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const parentLi = this.closest('li.has-children');
+                    const submenu = parentLi.querySelector('.toc-submenu');
+                    if (submenu) {
+                        submenu.classList.toggle('expanded');
+                        this.classList.toggle('rotated');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.toc-row a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const parentLi = this.closest('li.has-children');
+                    const btn = parentLi.querySelector('.toc-toggle-btn');
+                    const submenu = parentLi.querySelector('.toc-submenu');
+                    if (submenu) {
+                        submenu.classList.toggle('expanded');
+                        if (btn) btn.classList.toggle('rotated');
+                    }
+                });
+            });
+
+            // Highlight parent main link immediately upon clicking any sub-link
+            document.querySelectorAll('#TOC a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const isMainLink = link.closest('.toc-row') || (link.parentElement.parentElement === document.querySelector('#TOC > ul'));
+                    if (isMainLink) {
+                        document.querySelectorAll('#TOC > ul > li > a, #TOC > ul > li > .toc-row > a').forEach(a => a.classList.remove('active'));
+                        link.classList.add('active');
+                    } else {
+                        const parentLi = link.closest('#TOC > ul > li.has-children');
+                        if (parentLi) {
+                            document.querySelectorAll('#TOC > ul > li > a, #TOC > ul > li > .toc-row > a').forEach(a => a.classList.remove('active'));
+                            const mainA = parentLi.querySelector('.toc-row a');
+                            if (mainA) mainA.classList.add('active');
+                        }
+                    }
+                });
+            });
+
             const progressBar = document.getElementById('progress-bar');
             if (progressBar) {
                 window.addEventListener('scroll', () => {
@@ -2083,7 +2535,7 @@
             }
 
             const sections = document.querySelectorAll('.section');
-            const navLinks = document.querySelectorAll('#TOC li a');
+            const navLinks = document.querySelectorAll('#TOC > ul > li > a, #TOC > ul > li > .toc-row > a');
             if (sections.length && navLinks.length) {
                 window.addEventListener('scroll', () => {
                     let current = "";
@@ -2094,16 +2546,26 @@
                         }
                     });
 
-                    navLinks.forEach(link => {
-                        link.classList.remove('active');
-                        if (link.getAttribute('href') === `#${current}`) {
-                            link.classList.add('active');
+                    if (current) {
+                        let mappedCurrent = current;
+                        const match = current.match(/^section-(\d+)$/);
+                        if (match) {
+                            const secNum = parseInt(match[1], 10);
+                            if (secNum >= 5 && secNum <= 11) {
+                                mappedCurrent = 'section-5';
+                            }
                         }
-                    });
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${mappedCurrent}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
                 });
             }
 
-            navLinks.forEach(anchor => {
+            document.querySelectorAll('#TOC a').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     const targetId = this.getAttribute('href');
                     const targetElement = document.querySelector(targetId);

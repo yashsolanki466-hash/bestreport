@@ -22,7 +22,14 @@ const PATH_KEYS = new Set([
   'dge_xlsx_src',
   'barplot_image_src',
   'dotplot_image_src',
-  'src'
+  'gel_image_src',
+  'src',
+  'metagenome_phylum_chart_src',
+  'metagenome_heatmap_src',
+  'metagenome_alpha_plot_src',
+  'metagenome_rarefaction_src',
+  'metagenome_pcoa_src',
+  'metagenome_krona_src'
 ]);
 
 function isLocalFilePath(v: string): boolean {

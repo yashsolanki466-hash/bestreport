@@ -1,0 +1,63 @@
+Interim Report of Transcriptome sequencing & Analysis on
+
+Illumina Novaseq X Plus Platforms
+
+Submitted to: 
+
+Minnu Jose
+
+University of Calicut, INDIA
+
+Submitted by:
+
+Unigenome
+
+A life sciences division of Unipath Specialty Laboratory Ltd.
+
+3rd Floor, PASL House | Beside Sahjanand College | Panjara pol, Ambawadi, Ahmedabad – 380015 | Gujarat, India Tel :- +91-79-66197701 genomics@unipath.in | www.unigenome.in
+
+Project Details & Sample Details:
+
+Methods:
+
+Extraction and Quantitative analysis of RNA:
+
+RNA was extracted from sam cells samples using PVP extraction method. RNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed by on 1% agarose gel
+
+Preparation of library:
+
+The paired-end sequencing library was prepared using KAPA mRNA HyperPrep Kit for Illumina. (CAT #KK8581). The library preparation process was initiated with 500-1000 ng input. mRNA enrichment was performed as per user manual and mRNA was subjected to fragmentation, first & second-strand cDNA synthesis, end-repair, 3´ adenylating, adapter ligation, selective enrichment of adapter-ligated DNA fragments through PCR amplification, followed by validation of Library on Agilent 4150 tape station. The final library was pooled with other-samples, denatured & loaded on to flow cell. On the flow cell, cluster generation & sequencing was performed using Illumina Novaseq X plus platform to generate 2×150bp paired-end (PE) read.
+
+Quantity and quality check (QC) of library on Agilent Tape Station 4150:
+
+The amplified libraries were analyzed on TapeStation 4150 (Agilent Technologies) using High Sensitivity D1000 ScreenTape® as per manufacturer's instructions.
+
+Cluster Generation and Sequencing:
+
+After obtaining the Qubit concentration for the library and the mean peak size from Tape Station profile, library will be loaded onto illumine Novaseq X Plus for cluster generation and sequencing. Paired-End sequencing allows the template fragments to be sequenced in both the forward and reverse directions. The library molecules will bind to complementary adapter oligos on paired-end flow cell. The adapters are designed to allow selective cleavage of the forward strands after re-synthesis of the reverse strand during sequencing. The copied reverse strand is then used to sequence from the opposite end of the fragment.
+
+Results
+
+RNA QC using Agarose Gel
+
+Image 01 - RNA QC on 1% agarose gel
+
+Quantification by using Qubit® 4.0 Fluorometer
+
+Quantity and quality check (QC) of library on Agilent Tape Station 4150
+
+	TapeStation 4150 profiles of library loaded in Agilent High Sensitivity D1000ScreenTape®:
+
+Figure 1- C1                                                                          Figure 2- T1
+
+Figure 3- C1-Duplicate                               Figure 4- T1-Duplicate
+
+Conclusions:
+
+The libraries were prepared from the samples by KAPA mRNA Hyper Prep Kit for Illumina (CAT #KK8581).
+
+The average size of libraries is 479bp to 503bp* for C1, T1, C1-Duplicate and T1-Duplicate. samples.
+
+The libraries were sequenced on Illumina Novaseq X Plus platform using 2-x 150 bp chemistry to generate ~08-09GB/Sample.
+
+[END OF REPORT]

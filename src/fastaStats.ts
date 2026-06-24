@@ -7,6 +7,7 @@ export interface FastaAssemblyStats {
   num_transcripts: number;
   total_bp: number;
   mean_size: number;
+  max_size: number;
 }
 
 /** Stream-compute transcript count and length stats from a FASTA file. */
@@ -19,6 +20,7 @@ export async function parseFastaAssemblyStats(fastaPath: string): Promise<FastaA
 
   let num_transcripts = 0;
   let total_bp = 0;
+  let max_size = 0;
   let currentLen = 0;
 
   const rl = createInterface({
@@ -31,6 +33,9 @@ export async function parseFastaAssemblyStats(fastaPath: string): Promise<FastaA
       if (currentLen > 0) {
         num_transcripts++;
         total_bp += currentLen;
+        if (currentLen > max_size) {
+          max_size = currentLen;
+        }
       }
       currentLen = 0;
     } else {
@@ -40,12 +45,16 @@ export async function parseFastaAssemblyStats(fastaPath: string): Promise<FastaA
   if (currentLen > 0) {
     num_transcripts++;
     total_bp += currentLen;
+    if (currentLen > max_size) {
+      max_size = currentLen;
+    }
   }
 
   return {
     sample,
     num_transcripts,
     total_bp,
-    mean_size: num_transcripts > 0 ? Math.round(total_bp / num_transcripts) : 0
+    mean_size: num_transcripts > 0 ? Math.round(total_bp / num_transcripts) : 0,
+    max_size
   };
 }

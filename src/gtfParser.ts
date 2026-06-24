@@ -8,6 +8,7 @@ export interface GtfStats {
   transcriptCount: number;
   organism: string;
   source: string;
+  features: Record<string, number>;
 }
 
 /** Skip loading multi‑GB reference files into a single string (Node string limit ~512MB). */
@@ -41,6 +42,7 @@ export async function parseGtfStats(gtfPath: string): Promise<GtfStats> {
   const genes = new Set<string>();
   const transcripts = new Set<string>();
   let organism = '';
+  const features: Record<string, number> = {};
 
   const rl = createInterface({
     input: createReadStream(gtfPath, { encoding: 'utf8' }),
@@ -66,8 +68,13 @@ export async function parseGtfStats(gtfPath: string): Promise<GtfStats> {
     }
     const parts = line.split('\t');
     if (parts.length < 9) continue;
-    const feature = parts[2]?.toLowerCase();
+    const rawFeature = parts[2]?.trim();
+    const feature = rawFeature?.toLowerCase();
     const attrs = parts[8] || '';
+
+    if (rawFeature) {
+      features[rawFeature] = (features[rawFeature] || 0) + 1;
+    }
     
     // Support common GFF3/GTF attribute keys
     const geneId = extractAttr(attrs, 'gene_id') || extractAttr(attrs, 'ID') || extractAttr(attrs, 'gene');
@@ -89,7 +96,8 @@ export async function parseGtfStats(gtfPath: string): Promise<GtfStats> {
     geneCount: genes.size || transcripts.size,
     transcriptCount: transcripts.size,
     organism,
-    source: gtfPath
+    source: gtfPath,
+    features
   };
 }
 

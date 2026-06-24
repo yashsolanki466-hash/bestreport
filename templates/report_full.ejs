@@ -329,13 +329,13 @@
         <div class="cover-info">
             <p><strong>Project ID:</strong> <%= project_id %></p>
             <p><strong>Principal Investigator:</strong> <%= pi_name %></p>
-            <p><strong>Client:</strong> <%= client_name %></p>
+            <p><strong>Submitted To:</strong> <%= typeof submitted_to !== 'undefined' && submitted_to ? submitted_to : client_name %></p>
             <p><strong>Report Date:</strong> <%= date %></p>
         </div>
 
         <div class="submitted-to">
             <p style="margin-bottom: 5px;">Submitted to:</p>
-            <div style="font-size: 18px; color: var(--primary-color);"><%= client_name %></div>
+            <div style="font-size: 18px; color: var(--primary-color);"><%= typeof submitted_to !== 'undefined' && submitted_to ? submitted_to : client_name %></div>
             <div style="font-size: 14px; color: #eee;"><%= client_org || 'Client Organization' %></div>
 
             <div class="submitted-by">

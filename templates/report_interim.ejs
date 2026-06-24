@@ -13,203 +13,380 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
 
     <style>
         :root {
-            --primary-color: #F47920;
-            --secondary-color: #1A365D;
-            --accent-color: #3182CE;
-            --text-main: #2D3748;
-            --text-muted: #718096;
-            --bg-body: #F7FAFC;
-            --bg-sidebar: rgba(255, 255, 255, 0.85);
+            /* Brand palette — refined from the original Unigenome identity */
+            --primary-color: #E06D1B;
+            --primary-hover: #C25A0F;
+            --primary-soft: #FDF1E7;
+            --secondary-color: #0F2547;
+            --secondary-soft: #EEF2F8;
+            --accent-color: #2B6CB0;
+            --accent-soft: #E8F1FB;
+
+            --text-main: #1C2430;
+            --text-muted: #5B6B7F;
+            --text-faint: #8A97A8;
+
+            --bg-body: #F3F4F7;
+            --bg-sidebar: rgba(255, 255, 255, 0.88);
             --bg-paper: #FFFFFF;
-            --border-color: #E2E8F0;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --glass-blur: blur(12px);
+            --border-color: #E3E7ED;
+            --border-soft: #EDF0F4;
+
+            --success-color: #15803D;
+            --success-soft: #E9F7EF;
+            --warn-color: #B7791F;
+            --warn-soft: #FCF3DE;
+            --fail-color: #B42318;
+            --fail-soft: #FCEAE8;
+
+            --card-shadow: 0 1px 2px rgba(15, 37, 71, 0.04), 0 8px 24px -8px rgba(15, 37, 71, 0.10);
+            --card-shadow-hover: 0 1px 2px rgba(15, 37, 71, 0.05), 0 16px 36px -10px rgba(15, 37, 71, 0.16);
+            --glass-blur: blur(16px);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+
+            --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+            --font-ui: 'Outfit', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Courier New', monospace;
         }
 
-        /* Table of Contents Style */
-        .toc-list-item {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 12px;
-            font-size: 14px;
-            color: var(--text-main);
-            text-decoration: none;
+        * {
+            box-sizing: border-box;
         }
-        .toc-list-item.sub-item {
-            margin-left: 24px;
-            font-size: 13px;
-            color: #475569;
-        }
-        .toc-item-name {
-            flex-shrink: 0;
-            font-weight: 600;
-        }
-        .toc-list-item.sub-item .toc-item-name {
-            font-weight: normal;
-        }
-        .toc-item-dots {
-            flex-grow: 1;
-            border-bottom: 1px dotted #94a3b8;
-            margin: 0 8px;
-            position: relative;
-            top: -4px;
-        }
-        .toc-item-num {
-            flex-shrink: 0;
-            font-weight: bold;
-            color: var(--secondary-color);
+
+        ::selection {
+            background: rgba(224, 109, 27, 0.18);
         }
 
         body {
-            font-family: 'Lora', "Times New Roman", serif;
-            font-size: 11pt;
-            line-height: 1.62;
+            font-family: var(--font-serif);
+            font-size: 12.5px;
+            line-height: 1.7;
             color: var(--text-main);
             background-color: var(--bg-body);
+            background-image:
+                radial-gradient(circle at 12% 8%, rgba(43, 108, 176, 0.05), transparent 32%),
+                radial-gradient(circle at 88% 92%, rgba(224, 109, 27, 0.05), transparent 32%);
             margin: 0;
-            padding-left: 280px;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            padding-left: 292px;
+            transition: background-color 0.3s ease, color 0.3s ease, padding-left 0.3s ease;
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        h1, h2, h3, h4, .ui-font {
-            font-family: 'Inter', system-ui, sans-serif;
+        h1,
+        h2,
+        h3,
+        h4,
+        .ui-font {
+            font-family: var(--font-serif);
+            color: var(--secondary-color);
+            letter-spacing: -0.01em;
         }
 
         p {
-            margin-bottom: 1.2rem;
+            margin: 0 0 1.25rem 0;
             text-align: justify;
+            hyphens: auto;
+            font-size: 12.5px;
+            color: var(--text-main);
+        }
+
+        strong {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        a {
+            color: var(--accent-color);
         }
 
         .section {
-            scroll-margin-top: 40px;
+            scroll-margin-top: 32px;
         }
 
-        /* Fixed TOC Sidebar Style (Screen Only) */
+        /* ============ Fixed TOC Sidebar (Screen Only) ============ */
         #TOC {
+            font-family: var(--font-ui);
             position: fixed;
             top: 0;
             left: 0;
-            width: 280px;
+            width: 292px;
             height: 100vh;
             overflow-y: auto;
             background: var(--bg-sidebar);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border-right: 1px solid var(--border-color);
-            padding: 40px 0;
+            padding: 36px 0 28px;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+        }
+
+        #TOC::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #TOC::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Mobile Sidebar toggle button */
+        #mobile-toc-toggle {
+            display: none;
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--primary-color), var(--primary-hover));
+            color: #fff;
+            box-shadow: 0 10px 24px -6px rgba(224, 109, 27, 0.55);
+            border: none;
+            cursor: pointer;
+            z-index: 1010;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #mobile-toc-toggle:hover {
+            transform: translateY(-2px);
         }
 
         .toc-header {
-            padding: 0 32px 24px 32px;
+            padding: 0 28px 22px 28px;
             border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+        }
+
+        .toc-header img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .toc-header .toc-tag {
+            display: inline-block;
+            margin-top: 14px;
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            background: var(--accent-soft);
+            padding: 5px 10px;
+            border-radius: 20px;
         }
 
         #TOC ul {
             list-style: none;
-            padding: 0;
+            padding: 0 14px;
             margin: 0;
         }
 
         #TOC li a {
-            display: block;
-            padding: 12px 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            margin: 2px 0;
+            border-radius: var(--radius-sm);
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            border-left: 4px solid transparent;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 3px solid transparent;
+            transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #TOC li a:hover {
             color: var(--secondary-color);
-            background: rgba(0, 0, 0, 0.02);
+            background: var(--secondary-soft);
         }
 
         #TOC li a.active {
-            color: var(--secondary-color);
-            background: rgba(49, 130, 206, 0.08);
-            border-left: 4px solid var(--secondary-color);
-            font-weight: 600;
+            color: var(--primary-color);
+            background: var(--primary-soft);
+            border-left: 3px solid var(--primary-color);
+            font-weight: 700;
         }
 
-        /* Content Area */
+        /* ============ Content Area ============ */
         .main-container {
             margin: 40px auto;
-            padding: 80px 100px;
-            max-width: 1000px;
-            background-color: var(--bg-paper);
-            box-shadow: var(--card-shadow);
-            border-radius: 8px;
-            box-sizing: border-box;
-            border: 1px solid var(--border-color);
+            padding: 0 40px;
+            max-width: 1080px;
+            background-color: transparent;
+            box-shadow: none;
+            border: none;
         }
 
-        /* Cover Page */
+        /* ============ Responsive ============ */
+        @media screen and (max-width: 1200px) {
+            body {
+                padding-left: 0;
+            }
+
+            #TOC {
+                transform: translateX(-100%);
+                box-shadow: 0 0 40px rgba(15, 37, 71, 0.18);
+            }
+
+            #TOC.open {
+                transform: translateX(0);
+            }
+
+            #mobile-toc-toggle {
+                display: flex;
+            }
+
+            .main-container {
+                margin: 20px auto;
+                padding: 0 20px;
+                max-width: none;
+            }
+
+            .section {
+                padding: 32px 26px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .main-container {
+                margin: 14px auto;
+                padding: 0 12px;
+            }
+
+            .section {
+                padding: 26px 18px;
+                border-radius: var(--radius-md);
+            }
+
+            .cover-page {
+                padding: 48px 22px;
+            }
+
+            .cover-title {
+                font-size: 24px !important;
+                letter-spacing: 0.02em !important;
+            }
+
+            .cover-subtitle {
+                font-size: 16px !important;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            .tapestation-grid {
+                gap: 24px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            #TOC {
+                width: 86%;
+                max-width: 320px;
+            }
+        }
+
+        /* ============ Cover Page ============ */
         .cover-page {
-            height: 100vh;
+            height: auto;
+            min-height: 82vh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
             text-align: center;
-            padding: 50px;
+            padding: 76px 56px;
             box-sizing: border-box;
             page-break-after: always;
+            position: relative;
+            background: linear-gradient(180deg, #FFFFFF 0%, #FCFDFE 100%);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .cover-page::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--secondary-color) 0%, var(--accent-color) 48%, var(--primary-color) 100%);
         }
 
         .cover-logo {
-            max-width: 300px;
-            margin-bottom: 40px;
+            max-width: 250px;
+            max-height: 65px;
+            object-fit: contain;
         }
 
         .cover-title {
-            font-size: 30px;
-            font-weight: 800;
-            color: #000;
-            margin-bottom: 20px;
+            font-family: var(--font-serif);
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 16px;
             text-transform: uppercase;
+            letter-spacing: 0.06em;
         }
 
         .cover-subtitle {
-            font-size: 20px;
-            font-weight: 600;
-            color: #000;
-            margin-bottom: 40px;
+            font-family: var(--font-serif);
+            font-size: 21px;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 34px;
+            line-height: 1.4;
         }
 
         .cover-details {
-            font-size: 16px;
+            font-family: var(--font-ui);
+            font-size: 14px;
             color: var(--primary-color);
-            font-weight: bold;
-            margin-bottom: 60px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            margin-bottom: 56px;
         }
 
         .submitted-by {
-            margin-top: 25px;
-            color: #333;
+            margin-top: 22px;
+            color: var(--text-muted);
+            font-family: var(--font-ui);
             font-size: 12px;
-            line-height: 1.4;
+            line-height: 1.55;
         }
 
         .submitted-to {
             margin-top: auto;
             color: var(--secondary-color);
-            font-weight: bold;
-            font-size: 18px;
+            font-weight: 700;
+            font-family: var(--font-ui);
+            font-size: 16px;
         }
 
-        /* Typography */
+        /* ============ Typography ============ */
         h1.title {
             font-size: 28px;
             margin-top: 0;
@@ -218,126 +395,223 @@
             color: var(--secondary-color);
         }
 
+        .subtitle {
+            font-family: var(--font-ui);
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .section {
+            scroll-margin-top: 32px;
+            background-color: var(--bg-paper);
+            border-radius: var(--radius-lg);
+            padding: 48px 56px;
+            margin-bottom: 32px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+            page-break-inside: avoid;
+            position: relative;
+            transition: box-shadow 0.25s ease;
+        }
+
         h2 {
-            font-size: 22px;
-            color: var(--secondary-color);
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 8px;
-            margin-top: 40px;
-            margin-bottom: 20px;
+            font-family: var(--font-ui);
+            font-size: 12.5px;
             font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--secondary-color);
+            padding-bottom: 14px;
+            margin-top: 0;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            border-bottom: none;
+            position: relative;
             page-break-after: avoid;
         }
 
+        h2::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        h2::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -1px;
+            width: 48px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+
         h3 {
+            font-family: var(--font-serif);
             font-size: 16px;
-            font-weight: bold;
-            margin-top: 25px;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-top: 32px;
+            margin-bottom: 14px;
             color: var(--secondary-color);
             page-break-after: avoid;
         }
 
         h4 {
-            font-size: 14px;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            color: #555;
+            font-family: var(--font-ui);
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: var(--accent-color);
         }
 
-        /* Tables */
+        /* ============ Tables ============ */
         .table-wrapper {
             overflow-x: auto;
-            margin: 20px 0 30px 0;
+            margin: 18px 0 30px 0;
             page-break-inside: avoid;
+            border-radius: var(--radius-md);
         }
 
         .table-title {
-            font-weight: bold;
-            font-size: 12px;
-            margin-bottom: 8px;
-            color: var(--secondary-color);
+            font-family: var(--font-ui);
+            font-weight: 700;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 10px;
+            color: var(--accent-color);
         }
 
         table {
             width: 100%;
             max-width: 100%;
             border-spacing: 0;
-            border-collapse: collapse;
-            border: 1px solid #ddd;
-            font-size: 11px;
+            border-collapse: separate;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            font-family: var(--font-ui);
+            font-size: 12px;
+            box-shadow: 0 1px 2px rgba(15, 37, 71, 0.03);
         }
 
         table th {
-            padding: 8px 10px;
+            padding: 12px 14px;
             background-color: var(--secondary-color);
+            background-image: linear-gradient(180deg, #16315A, var(--secondary-color));
             color: #fff;
-            border: 1px solid var(--secondary-color);
+            border: none;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
             text-align: left;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 11px;
+        }
+
+        table th:last-child {
+            border-right: none;
         }
 
         table td {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border-soft);
+            border-right: 1px solid var(--border-soft);
             vertical-align: middle;
+            transition: background-color 0.15s ease;
         }
 
-        table tr:nth-of-type(even) {
-            background-color: #f2f2f2;
+        table td:last-child {
+            border-right: none;
         }
 
-        /* Figures */
+        table tr:nth-of-type(even) td {
+            background-color: #FAFBFD;
+        }
+
+        table tr:hover td {
+            background-color: var(--accent-soft);
+        }
+
+        /* Make first column bold in all tables */
+        table tbody td:first-child {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        /* ============ Figures ============ */
         .figure {
-            margin: 30px 0;
+            margin: 28px 0;
             text-align: center;
-            background: #fff;
-            padding: 10px;
+            background: var(--bg-paper);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-md);
+            padding: 18px;
             page-break-inside: avoid;
         }
 
         .figure img {
             max-width: 100%;
-            max-height: 400px;
             height: auto;
-            object-fit: contain;
+            border-radius: var(--radius-sm);
         }
 
         .caption {
+            font-family: var(--font-ui);
             font-size: 11px;
-            color: var(--secondary-color);
-            margin-top: 10px;
-            font-style: italic;
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-style: normal;
             font-weight: 600;
+            letter-spacing: 0.01em;
         }
 
+        /* ============ Info Box ============ */
         .info-box {
-            padding: 20px;
+            padding: 18px 22px;
             margin-bottom: 25px;
-            border-left: 5px solid var(--primary-color);
-            background-color: #f9f9f9;
-            color: #333;
+            border-left: 4px solid var(--primary-color);
+            background: var(--primary-soft);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: var(--text-main);
         }
 
+        /* ============ TapeStation Cards ============ */
         .tapestation-grid {
             display: flex;
             flex-direction: column;
-            gap: 40px;
-            margin: 30px 0;
+            gap: 32px;
+            margin: 28px 0;
         }
 
         .tapestation-card {
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 20px;
+            border-radius: var(--radius-md);
+            padding: 22px;
             text-align: center;
-            background: #fff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background: linear-gradient(180deg, #FFFFFF 0%, #FCFDFE 100%);
+            box-shadow: var(--card-shadow);
             page-break-inside: avoid;
             width: 100%;
             box-sizing: border-box;
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .tapestation-card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-2px);
         }
 
         .tapestation-card img {
@@ -346,19 +620,130 @@
             height: auto;
             max-height: 500px;
             object-fit: contain;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
-            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-soft);
+            padding-bottom: 14px;
+            margin-bottom: 14px;
+            border-radius: var(--radius-sm);
+            background: #fff;
         }
 
         .tapestation-card span {
-            font-size: 14px;
+            font-family: var(--font-ui);
+            font-size: 13px;
             font-weight: 600;
             color: var(--secondary-color);
             display: block;
         }
 
-        /* Print Formatting */
+        /* ============ Inline TOC ============ */
+        .inline-toc {
+            background: var(--bg-paper);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 40px 56px !important;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 40px;
+            page-break-after: always;
+        }
+
+        .inline-toc h2 {
+            font-family: var(--font-ui);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border: none;
+            display: block;
+        }
+
+        .inline-toc h2::after, .inline-toc h2::before {
+            display: none;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-family: var(--font-ui);
+        }
+
+        .toc-list li {
+            margin: 8px 0;
+        }
+
+        .toc-list li a {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text-main);
+            font-size: 13.5px;
+            transition: color 0.15s ease;
+        }
+
+        .toc-list li a:hover {
+            color: var(--primary-color);
+        }
+
+        .toc-list li a:hover .title {
+            text-decoration: underline;
+        }
+
+        .toc-list li a .title {
+            order: 1;
+            background: var(--bg-paper);
+            padding-right: 8px;
+        }
+
+        .toc-list li a .page {
+            order: 3;
+            background: var(--bg-paper);
+            padding-left: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .toc-list li a .dots {
+            order: 2;
+            flex-grow: 1;
+            border-bottom: 2px dotted #c5cbd5;
+            margin: 0 4px;
+            position: relative;
+            top: -4px;
+        }
+
+        /* Indentation levels */
+        .toc-list li.level-1 {
+            font-weight: 600;
+            margin-top: 14px;
+        }
+        
+        .toc-list li.level-1 a .title {
+            color: var(--secondary-color);
+        }
+
+        /* Scroll Progress Bar */
+        #scroll-progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            z-index: 2000;
+        }
+        #scroll-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            transition: width 0.05s ease-out;
+        }
+
+        /* ============ Print Formatting ============ */
         @media print {
             @page {
                 size: A4;
@@ -371,6 +756,7 @@
 
             body {
                 background-color: #fff !important;
+                background-image: none !important;
                 font-size: 10.5pt;
                 line-height: 1.55;
                 margin: 0;
@@ -378,8 +764,9 @@
                 width: 100% !important;
             }
 
-            #TOC {
-                display: none;
+            #TOC,
+            #mobile-toc-toggle {
+                display: none !important;
             }
 
             .main-container {
@@ -393,7 +780,16 @@
                 border: none;
             }
 
-            .table-wrapper, table, .figure, .tapestation-card {
+            .section {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+            }
+
+            .table-wrapper,
+            table,
+            .figure,
+            .tapestation-card {
                 break-inside: avoid;
             }
 
@@ -418,6 +814,8 @@
 
             .cover-page {
                 page-break-after: always;
+                box-shadow: none;
+                border: none;
             }
         }
     </style>
@@ -425,14 +823,24 @@
 
 <body>
 
+    <div id="scroll-progress-container">
+        <div id="scroll-progress"></div>
+    </div>
+
     <div id="TOC">
-        <div class="toc-header" style="text-align: center; padding: 20px 15px;">
-            <img src="<%= logo_path %>" alt="Unigenome Logo" style="max-height: 45px; max-width: 100%; object-fit: contain;">
+        <div class="toc-header" style="padding: 0 24px 20px 24px;">
+            <img src="<%= logo_path %>" alt="Unigenome Logo"
+                style="max-width: 180px; width: 100%; height: auto; margin-bottom: 8px; display: block;">
+            <div
+                style="font-size: 12.5px; color: var(--text-muted); font-family: 'Outfit', 'Inter', sans-serif; font-weight: 600; letter-spacing: 0.02em;">
+                NGS ID: <%= project_id %>
+            </div>
+            <div class="toc-tag">Interim Report</div>
         </div>
         <ul style="margin-top: 10px;">
             <li><a href="#section-1" class="active">1 Project Details & Sample Details</a></li>
             <li><a href="#section-2">2 Methods</a></li>
-            <li><a href="#section-3">3 Results (RNA QC & Qubit)</a></li>
+            <li><a href="#section-3">3 Results (<%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA' : 'RNA' %> QC & Qubit)</a></li>
             <li><a href="#section-4">4 Library QC (TapeStation)</a></li>
             <li><a href="#section-5">5 Conclusions</a></li>
         </ul>
@@ -443,36 +851,39 @@
         <!-- Cover Page -->
         <div class="cover-page">
             <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-                <img src="<%= logo_path %>" alt="Unigenome Logo" style="max-height: 65px; max-width: 250px; object-fit: contain; margin: 0;">
+                <img src="<%= logo_path %>" alt="Unigenome Logo" class="cover-logo">
                 <% if (typeof unipath_logo_path !== 'undefined' && unipath_logo_path) { %>
-                    <img src="<%= unipath_logo_path %>" alt="Unipath Logo" style="max-height: 65px; max-width: 250px; object-fit: contain; margin: 0;">
+                    <img src="<%= unipath_logo_path %>" alt="Unipath Logo" class="cover-logo">
                 <% } %>
             </div>
 
             <div>
                 <div class="cover-title">Interim Report of</div>
-                <div class="cover-subtitle">Transcriptome Sequencing & Library Preparation</div>
+                <div class="cover-subtitle"><%= service_type || 'Transcriptome Sequencing & Library Preparation' %></div>
                 <div class="cover-details">On <%= platform %> Platforms</div>
-                <div class="cover-details" style="font-size: 18px; margin-top: 10px;">Project ID: <%= project_id %></div>
-            </div>
-
-            <div class="submitted-to">
-                <p style="margin-bottom: 5px;">Submitted to:</p>
-                <div style="font-size: 22px; color: var(--primary-color);"><%= client_name %></div>
-                <div style="font-size: 16px; color: #333;"><%= client_org %></div>
-
-                <div class="submitted-by">
-                    <div style="font-weight: bold; margin-top: 18px;">Submitted by:</div>
-                    <div style="font-weight: 700;">Unigenome</div>
-                    <div>A life sciences division of Unipath Specialty Laboratory Ltd.</div>
-                    <div>3rd Floor, PASL House | Beside Sahjanand College | Panjara pol, Ambawadi,</div>
-                    <div>Ahmedabad – 380015 | Gujarat, India</div>
-                    <div>Tel :- +91-79-66197701</div>
-                    <div>genomics@unipath.in | www.unigenome.in</div>
+                <div class="cover-details" style="font-size: 18px; margin-top: 10px;">Project ID: <%= project_id %>
                 </div>
             </div>
 
-            <div style="width: 100%; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 40px; font-size: 10px; color: #666;">
+            <div class="submitted-to">
+                <p style="margin-bottom: 5px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 500;">Submitted to:</p>
+                <div style="font-size: 20px; color: var(--primary-color); font-weight: 700; margin-bottom: 2px;"><%= typeof submitted_to !== 'undefined' && submitted_to ? submitted_to : client_name %></div>
+                <div style="font-size: 14px; color: var(--text-main); font-weight: 500;"><%= client_org %></div>
+
+                <div class="submitted-by">
+                    <div style="font-weight: 600; margin-top: 18px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;">Submitted by:</div>
+                    <div style="font-weight: 700; color: var(--secondary-color); font-size: 13px; margin-top: 2px;">Unigenome</div>
+                    <div style="font-size: 11px;">A life sciences division of Unipath Specialty Laboratory Ltd.</div>
+                    <div style="font-size: 11px; margin-top: 2px; color: var(--text-muted);">
+                        3rd Floor, PASL House | Beside Sahjanand College | Panjara pol, Ambawadi,<br>
+                        Ahmedabad – 380015 | Gujarat, India<br>
+                        Tel: +91-79-66197701 | genomics@unipath.in | www.unigenome.in
+                    </div>
+                </div>
+            </div>
+
+            <div
+                style="width: 100%; border-top: 2px solid var(--primary-color); padding-top: 10px; margin-top: 40px; font-size: 10px; color: #666;">
                 Unigenome | Confidential | <%= project_id %> | <%= report_date %>
             </div>
         </div>
@@ -480,51 +891,62 @@
         <!-- Table of Contents Page -->
         <div class="toc-page-container" style="page-break-after: always; padding: 40px 0;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 30px;">
-                <div style="font-size: 10px; color: #475569; line-height: 1.4; max-width: 60%; font-family: 'Inter', sans-serif;">
+                <div style="font-size: 10px; color: #475569; line-height: 1.4; max-width: 60%; font-family: 'Outfit', 'Inter', sans-serif;">
                     <strong>Lab Facility:</strong> 2A, 3A, 3B PASL-House, Beside Sahjanand College, Opposite Kamdhenu Complex, Panjara pole, Ambawadi, Ahmedabad-380015, Gujarat<br>
                     Ph: +91-79-49006800 | WhatsApp: 6356005900 | Email: info@unigenome.in | Website: www.unigenome.in
                 </div>
                 <div style="text-align: right;">
                     <img src="<%= logo_path %>" alt="Unigenome Logo" style="max-height: 40px; object-fit: contain; margin-bottom: 5px;"><br>
-                    <span style="font-size: 10px; font-family: 'Inter', sans-serif; font-weight: bold; color: #475569;"><%= project_id %> | Date: <%= report_date %></span>
+                    <span style="font-size: 10px; font-family: 'Outfit', 'Inter', sans-serif; font-weight: bold; color: #475569;"><%= project_id %> | Date: <%= report_date %></span>
                 </div>
             </div>
             
-            <h2 style="text-align: center; border-bottom: none; margin-top: 10px; margin-bottom: 30px; color: var(--secondary-color); font-family: 'Inter', sans-serif; font-weight: 700;">Table of Content</h2>
-            
-            <div style="margin: 20px 0; font-family: 'Inter', sans-serif; padding: 0 10px;">
-                <a href="#section-1" class="toc-list-item">
-                    <span class="toc-item-name">1. Project Details & Sample Details</span>
-                    <span class="toc-item-dots"></span>
-                    <span class="toc-item-num">3</span>
-                </a>
-                <a href="#section-2" class="toc-list-item">
-                    <span class="toc-item-name">2. Methods</span>
-                    <span class="toc-item-dots"></span>
-                    <span class="toc-item-num">4</span>
-                </a>
-                <a href="#section-3" class="toc-list-item">
-                    <span class="toc-item-name">3. Results (RNA QC & Qubit)</span>
-                    <span class="toc-item-dots"></span>
-                    <span class="toc-item-num">5</span>
-                </a>
-                <a href="#section-4" class="toc-list-item">
-                    <span class="toc-item-name">4. Library QC (TapeStation)</span>
-                    <span class="toc-item-dots"></span>
-                    <span class="toc-item-num">6</span>
-                </a>
-                <a href="#section-5" class="toc-list-item">
-                    <span class="toc-item-name">5. Conclusions</span>
-                    <span class="toc-item-dots"></span>
-                    <span class="toc-item-num">7</span>
-                </a>
+            <div class="inline-toc" style="box-shadow: none; border: none; padding: 0 !important; margin-bottom: 0;">
+                <h2>Table of Contents</h2>
+                <ul class="toc-list">
+                    <li class="level-1">
+                        <a href="#section-1">
+                            <span class="title">1. Project Details & Sample Details</span>
+                            <span class="dots"></span>
+                            <span class="page">3</span>
+                        </a>
+                    </li>
+                    <li class="level-1">
+                        <a href="#section-2">
+                            <span class="title">2. Methods</span>
+                            <span class="dots"></span>
+                            <span class="page">4</span>
+                        </a>
+                    </li>
+                    <li class="level-1">
+                        <a href="#section-3">
+                            <span class="title">3. Results (<%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA' : 'RNA' %> QC & Qubit)</span>
+                            <span class="dots"></span>
+                            <span class="page">5</span>
+                        </a>
+                    </li>
+                    <li class="level-1">
+                        <a href="#section-4">
+                            <span class="title">4. Library QC (TapeStation)</span>
+                            <span class="dots"></span>
+                            <span class="page">6</span>
+                        </a>
+                    </li>
+                    <li class="level-1">
+                        <a href="#section-5">
+                            <span class="title">5. Conclusions</span>
+                            <span class="dots"></span>
+                            <span class="page">7</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
 
         <!-- Section 1 -->
         <div id="section-1" class="section">
             <h2>1. Project Details & Sample Details</h2>
-            <p>This interim report outlines the status of RNA extraction, quality control, and library preparation for the project <%= project_id %>.</p>
+            <p>This interim report outlines the status of <%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA' : 'RNA' %> extraction, quality control, and library preparation for the project <%= project_id %>.</p>
             
             <div class="table-wrapper">
                 <div class="table-title">Table 1.1: Project Specifications</div>
@@ -537,39 +959,39 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Service Type</strong></td>
+                            <td>Service Type</td>
                             <td><%= service_type || 'Transcriptome Sequencing' %></td>
                         </tr>
                         <tr>
-                            <td><strong>Platform</strong></td>
+                            <td>Platform</td>
                             <td><%= platform %></td>
                         </tr>
                         <tr>
-                            <td><strong>Read Length</strong></td>
+                            <td>Read Length</td>
                             <td><%= read_length || '2 X 150 PE' %></td>
                         </tr>
                         <tr>
-                            <td><strong>Data Throughput</strong></td>
+                            <td>Data Throughput</td>
                             <td><%= data_throughput || '~06GB / Sample' %></td>
                         </tr>
                         <tr>
-                            <td><strong>Type of Sample</strong></td>
+                            <td>Type of Sample</td>
                             <td><%= sample_type || 'Leaf' %></td>
                         </tr>
                         <tr>
-                            <td><strong>No. of Samples</strong></td>
+                            <td>No. of Samples</td>
                             <td><%= sample_count %></td>
                         </tr>
                         <tr>
-                            <td><strong>Samples ID of Libraries Prepared</strong></td>
+                            <td>Samples ID of Libraries Prepared</td>
                             <td style="word-break: break-word;"><%= samples.join(', ') %></td>
                         </tr>
                         <tr>
-                            <td><strong>Shipping Condition</strong></td>
+                            <td>Shipping Condition</td>
                             <td><%= shipping_condition || 'NA' %></td>
                         </tr>
                         <tr>
-                            <td><strong>No. of Libraries Prepared</strong></td>
+                            <td>No. of Libraries Prepared</td>
                             <td><%= no_of_libraries_prepared || sample_count %></td>
                         </tr>
                     </tbody>
@@ -581,8 +1003,8 @@
         <div id="section-2" class="section">
             <h2>2. Methods</h2>
 
-            <h3>2.1 <%= static_snippets.wet_lab?.rna_isolation_qc_header || 'Extraction and Quantitative analysis of RNA:' %></h3>
-            <p><%= static_snippets.wet_lab?.rna_isolation_qc || 'RNA was extracted from samples using standard methods. RNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed on 1% agarose gel.' %></p>
+            <h3>2.1 <%= static_snippets.wet_lab?.rna_isolation_qc_header || ((service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'Extraction and Quantitative analysis of DNA:' : 'Extraction and Quantitative analysis of RNA:') %></h3>
+            <p><%= static_snippets.wet_lab?.rna_isolation_qc || ((service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA was extracted from samples using standard methods. DNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed on 1.8% agarose gel.' : 'RNA was extracted from samples using standard methods. RNA quantity was measured using Qubit® 4.0 fluorometer and quality analyzed on 1% agarose gel.') %></p>
 
             <h3>2.2 <%= static_snippets.wet_lab?.library_preparation_header || 'Preparation of Library:' %></h3>
             <p><%= static_snippets.wet_lab?.library_preparation || 'The paired-end sequencing library was prepared using KAPA mRNA HyperPrep Kit for Illumina. mRNA enrichment was performed, fragmented, and subjected to cDNA synthesis and adapter ligation.' %></p>
@@ -600,13 +1022,13 @@
         <div id="section-3" class="section">
             <h2>3. Results</h2>
 
-            <h3>3.1 RNA QC using Agarose Gel</h3>
-            <p>RNA quality was validated using 1% Agarose Gel electrophoresis to ensure intact ribosomal RNA bands (28S and 18S).</p>
+            <h3>3.1 <%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA QC using Agarose Gel' : 'RNA QC using Agarose Gel' %></h3>
+            <p><%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA quality was validated using 1.8% Agarose Gel electrophoresis to ensure intact genomic DNA/amplicon bands.' : 'RNA quality was validated using 1% Agarose Gel electrophoresis to ensure intact ribosomal RNA bands (28S and 18S).' %></p>
             
             <% if (gel_image_src) { %>
             <div class="figure">
-                <img src="<%= gel_image_src %>" alt="RNA QC Agarose Gel" />
-                <p class="caption">Image 01: RNA QC on 1% agarose gel</p>
+                <img src="<%= gel_image_src %>" alt="QC Agarose Gel" style="max-width: 100%; max-height: 400px; object-fit: contain;" />
+                <p class="caption">Image 01: <%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA QC on 1.8% agarose gel' : 'RNA QC on 1% agarose gel' %></p>
             </div>
             <% } %>
 
@@ -636,7 +1058,7 @@
 
             <h3>3.2 Qubit Quantification Data</h3>
             <div class="table-wrapper">
-                <div class="table-title">Table 3.2: RNA Quantification (Qubit)</div>
+                <div class="table-title">Table 3.2: <%= (service_type && (service_type.toLowerCase().includes('16s') || service_type.toLowerCase().includes('dna') || service_type.toLowerCase().includes('metagenome'))) ? 'DNA' : 'RNA' %> Quantification (Qubit)</div>
                 <table>
                     <thead>
                         <tr>
@@ -710,34 +1132,80 @@
 
     </div>
 
+    <button id="mobile-toc-toggle" onclick="toggleMobileSidebar()" aria-label="Toggle Navigation">☰</button>
+
+    <!-- Floating Action Buttons -->
+    <div style="position: fixed; bottom: 22px; right: 22px; display: flex; flex-direction: column; gap: 12px; z-index: 1010;" class="no-print">
+        <button onclick="window.print()" title="Export to PDF / Print" style="width: 52px; height: 52px; border-radius: 50%; background: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: var(--card-shadow); transition: transform 0.2s ease;">
+            <i data-lucide="printer" style="width: 22px; height: 22px;"></i>
+        </button>
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to top" style="width: 52px; height: 52px; border-radius: 50%; background: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: var(--card-shadow); transition: transform 0.2s ease;">
+            <i data-lucide="arrow-up" style="width: 22px; height: 22px;"></i>
+        </button>
+    </div>
+
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Active section highlighter on scroll
-        const sections = document.querySelectorAll('.section');
+        // Toggle mobile sidebar
+        function toggleMobileSidebar() {
+            const toc = document.getElementById('TOC');
+            const btn = document.getElementById('mobile-toc-toggle');
+            if (toc.classList.contains('open')) {
+                toc.classList.remove('open');
+                btn.innerHTML = '☰';
+            } else {
+                toc.classList.add('open');
+                btn.innerHTML = '✕';
+            }
+        }
+
+        // Close sidebar when clicking any TOC link on mobile
+        document.querySelectorAll('#TOC a').forEach(link => {
+            link.addEventListener('click', () => {
+                const toc = document.getElementById('TOC');
+                const btn = document.getElementById('mobile-toc-toggle');
+                if (toc.classList.contains('open')) {
+                    toc.classList.remove('open');
+                    btn.innerHTML = '☰';
+                }
+            });
+        });
+
+        // Scroll Spy active navigation highlight logic using getBoundingClientRect
+        const sections = document.querySelectorAll('.main-container .section');
         const navLinks = document.querySelectorAll('#TOC ul li a');
 
         window.addEventListener('scroll', () => {
             let current = '';
             sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (window.scrollY >= (sectionTop - 150)) {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= window.innerHeight * 0.6) {
                     current = section.getAttribute('id');
                 }
             });
 
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === `#${current}`) {
-                    link.classList.add('active');
-                }
-            });
-            // Default to first section when near top
-            if (window.scrollY < 200 && navLinks.length > 0) {
-                navLinks.forEach(link => link.classList.remove('active'));
-                navLinks[0].classList.add('active');
+            if (current) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + current) {
+                        link.classList.add('active');
+                    }
+                });
             }
+        }, { capture: true, passive: true });
+
+        // Trigger once on load
+        window.dispatchEvent(new Event('scroll'));
+
+        // Scroll Progress Indicator Logic
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+            const progressEl = document.getElementById('scroll-progress');
+            if (progressEl) progressEl.style.width = scrolled + '%';
         });
     </script>
 

@@ -114,9 +114,8 @@ async function scanProjectDirectory(projectPath: string) {
   const laneMapFiles = laneExact.length > 0 ? laneExact : excelFiles.filter(isLaneFile);
 
   // ── Image classification ───────────────────────────────────────────────────
-  // Sort all image files alphabetically A-Z by their filename
+  // Sort all images alphabetically (A to Z). First is agarose gel, remaining are tapestation profiles.
   const sortedImages = [...imageFiles].sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
-  
   const gelImages = sortedImages.length > 0 ? [sortedImages[0]] : [];
   const tapestationImages = sortedImages.length > 1 ? sortedImages.slice(1) : [];
   const orderedImageFiles = sortedImages;

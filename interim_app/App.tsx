@@ -205,26 +205,15 @@ function classifyAndOrderImages(images: string[]): {
   ordered: string[];
 } {
   const byBase = (a: string, b: string) => fileBase(a).localeCompare(fileBase(b));
-  const sorted = [...images].sort(byBase);
 
-  const gel = sorted.length > 0 ? [sorted[0]] : [];
-  const tapestation = sorted.length > 1 ? sorted.slice(1) : [];
+  const sortedAll = [...images].sort(byBase);
 
-  const rnaQc = images.filter(f => /rna.*qc|qc.*rna/i.test(fileBase(f)));
-  const bioanalyzer = images.filter(f => /bioanalyzer|rin|ladder/i.test(fileBase(f)));
-  const qubit = images.filter(f => /qubit|quant/i.test(fileBase(f)));
+  const gel = sortedAll.length > 0 ? [sortedAll[0]] : [];
+  const tapestation = sortedAll.length > 1 ? sortedAll.slice(1) : [];
 
-  return { gel, tapestation, rnaQc, bioanalyzer, qubit, ordered: sorted };
+  return { gel, tapestation, rnaQc: [], bioanalyzer: [], qubit: [], ordered: sortedAll };
 }
 // ─────────────────────────────────────────────────────────────────────────────
-
-function getImageLabel(src: string): string {
-  if (!src) return '';
-  if (src.startsWith('data:')) {
-    return `Uploaded Custom Image (${src.substring(0, 30)}...)`;
-  }
-  return src.split(/[/\\]/).pop() || src;
-}
 
 export default function App() {
 
@@ -407,14 +396,6 @@ export default function App() {
     };
     checkApi();
   }, []);
-
-  const availableImages = Array.from(new Set([
-    ...(scanResult?.imageFiles || []),
-    ...(detectedImages.gel || []),
-    ...(detectedImages.tapestation || []),
-    ...tapestationImages.map(img => img.src),
-    ...(selectedGelImage ? [selectedGelImage] : [])
-  ])).filter(Boolean);
 
   const resolveImageSrc = (src: string) => {
     if (!src) return '';
@@ -755,22 +736,16 @@ export default function App() {
 
       // Automatically align tapestation images with qubitData sample IDs in sequence
       setTapestationImages(prev => {
-        const hasExistingValid = prev.some(p => qubitData.some(q => q.sample_id === p.sample_id));
-        if (hasExistingValid) {
-          // Re-map to match the current qubitData order, preserving manual selections if they exist.
-          return qubitData.map((row, idx) => {
-            const existing = prev.find(p => p.sample_id === row.sample_id);
-            if (existing) return existing;
-            // Otherwise fallback to detected image at this index
-            const src = detectedImages.tapestation[idx] || '';
-            return { sample_id: row.sample_id, src };
-          });
+        if (prev.length > 0) {
+          return prev.map((img, idx) => ({
+            ...img,
+            sample_id: qubitData[idx]?.sample_id || img.sample_id || `Sample_${idx + 1}`
+          }));
         }
-
         if (detectedImages.tapestation && detectedImages.tapestation.length > 0) {
-          return qubitData.map((row, idx) => ({
-            sample_id: row.sample_id,
-            src: detectedImages.tapestation[idx] || ''
+          return detectedImages.tapestation.map((src, idx) => ({
+            sample_id: qubitData[idx]?.sample_id || `Sample_${idx + 1}`,
+            src
           }));
         }
         return prev;
@@ -2783,29 +2758,32 @@ export default function App() {
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Agarose Gel Mapping</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <div className="flex flex-col gap-2">
+                      <label className="block text-xs font-bold text-slate-500 mb-1">Assigned Gel Image</label>
+                      <div className="flex gap-2">
                         <select
                           value={selectedGelImage}
                           onChange={(e) => setSelectedGelImage(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:border-sky-500 focus:outline-none"
                         >
                           <option value="">-- Choose Gel Image --</option>
-                          {availableImages.map((f: string) => (
-                            <option key={f} value={f}>{getImageLabel(f)}</option>
+                          {(scanResult?.imageFiles || []).map((f: string) => (
+                            <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
                           ))}
                         </select>
-                        <label className="bg-slate-100 hover:bg-slate-200 active:scale-[0.98] border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-center cursor-pointer block">
-                          Upload Custom Gel Image
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleGelImageUpload(file);
-                            }}
-                          />
-                        </label>
+                        {isWebMode && (
+                          <label className="bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer shrink-0 flex items-center justify-center shadow-xs">
+                            Upload
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleGelImageUpload(file);
+                              }}
+                            />
+                          </label>
+                        )}
                       </div>
                     </div>
                     {selectedGelImage && (
@@ -2915,49 +2893,50 @@ export default function App() {
                       return (
                         <div key={idx} className="border border-slate-100 rounded-lg p-3 bg-slate-50 flex items-center justify-between gap-4">
                           <span className="font-mono text-xs font-bold text-slate-700">{row.sample_id}</span>
-                          <div className="flex-1 flex flex-col gap-1.5">
-                            <select
-                              value={assigned}
-                              onChange={(e) => {
-                                setTapestationImages(prev => {
-                                  const filter = prev.filter(i => i.sample_id !== row.sample_id);
+                          <div className="flex-1">
+                            <div className="flex gap-2 items-center">
+                              <select
+                                value={assigned}
+                                onChange={(e) => {
+                                  const filter = tapestationImages.filter(i => i.sample_id !== row.sample_id);
                                   if (e.target.value) {
                                     filter.push({ sample_id: row.sample_id, src: e.target.value });
                                   }
-                                  return filter;
-                                });
-                              }}
-                              className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs focus:border-sky-500 focus:outline-none font-mono"
-                            >
-                              <option value="">-- No Tape Image --</option>
-                              {availableImages.map((f: string) => (
-                                <option key={f} value={f}>{getImageLabel(f)}</option>
-                              ))}
-                            </select>
-                            
-                            <label className="bg-white hover:bg-slate-100 active:scale-[0.98] border border-slate-200 rounded px-2.5 py-1 text-[10px] font-semibold cursor-pointer text-center block text-slate-600 transition-all">
-                              Upload Custom Image
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = (ev) => {
-                                      const dataUrl = ev.target?.result as string;
-                                      setTapestationImages(prev => {
-                                        const filter = prev.filter(i => i.sample_id !== row.sample_id);
-                                        filter.push({ sample_id: row.sample_id, src: dataUrl });
-                                        return filter;
-                                      });
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
+                                  setTapestationImages(filter);
                                 }}
-                              />
-                            </label>
+                                className="w-full bg-white border border-slate-200 rounded px-2 py-1.5 text-xs focus:border-sky-500 focus:outline-none font-mono"
+                              >
+                                <option value="">-- No Tape Image --</option>
+                                {(scanResult?.imageFiles || []).map((f: string) => (
+                                  <option key={f} value={f}>{f.split(/[\\/]/).pop()}</option>
+                                ))}
+                              </select>
+                              {isWebMode && (
+                                <label className="bg-white hover:bg-slate-100 border border-slate-200 rounded px-2.5 py-1.5 text-[10px] font-semibold cursor-pointer shrink-0 text-center">
+                                  Upload
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (ev) => {
+                                          const dataUrl = ev.target?.result as string;
+                                          setTapestationImages(prev => {
+                                            const filter = prev.filter(i => i.sample_id !== row.sample_id);
+                                            filter.push({ sample_id: row.sample_id, src: dataUrl });
+                                            return filter;
+                                          });
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
                           </div>
                           {assigned && (
                             <img src={resolveImageSrc(assigned)} alt="Tapestation Profile" className="w-12 h-10 object-cover rounded bg-white animate-in fade-in duration-200" />
